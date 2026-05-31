@@ -59,28 +59,28 @@ family income
 🎓 Academic Factors
 
 Factor	                    Description
-Attendance Records    	Measures the percentage of classes attended by a student. Higher attendance generally reflects                               greater engagement and is often associated with improved academic performance.
-Study Hours         	Represents the average number of hours a student spends studying per day or week. Consistent                                 study habits typically contribute to better learning outcomes.
-Previous GPA	          Indicates the student's cumulative Grade Point Average from prior academic periods. It serves                                as a strong predictor of future academic achievement.
-Tutoring Sessions per Week    Refers to the number of tutoring or academic support sessions attended weekly. Additional                                    academic assistance may improve understanding and performance.
+Attendance Records    	    Measures the percentage of classes attended by a student. Higher attendance generally reflects                               greater engagement and is often associated with improved academic performance.
+Study Hours         	      Represents the average number of hours a student spends studying per day or week. Consistent                                 study habits typically contribute to better learning outcomes.
+Previous GPA	              Indicates the student's cumulative Grade Point Average from prior academic periods. It serves                                as a strong predictor of future academic achievement.
+Tutoring Sessions per Week  Refers to the number of tutoring or academic support sessions attended weekly. Additional                                    academic assistance may improve understanding and performance.
 🧠 Well-Being Factors
 
 Factor	                    Description
-Sleep Hours per Night	Represents the average number of hours a student sleeps each night. Adequate sleep supports                                  concentration, memory retention, and overall academic performance.
-Stress Level        	Measures the level of academic or personal stress experienced by a student, typically                                        categorized as low, medium, or high. Excessive stress may negatively impact learning and                                     performance.
-Screen Time per Day	          Indicates the average number of hours spent using electronic devices such as smartphones,                                    computers, or tablets. Excessive screen time may affect study habits and sleep quality.
-Exam Anxiety        	Reflects the degree of nervousness or anxiety a student experiences before or during                                         examinations. High anxiety levels can affect academic outcomes and test performance.
+Sleep Hours per Night 	    Represents the average number of hours a student sleeps each night. Adequate sleep supports                                  concentration, memory retention, and overall academic performance.
+Stress Level        	      Measures the level of academic or personal stress experienced by a student, typically                                        categorized as low, medium, or high. Excessive stress may negatively impact learning and                                     performance.
+Screen Time per Day	        Indicates the average number of hours spent using electronic devices such as smartphones,                                    computers, or tablets. Excessive screen time may affect study habits and sleep quality.
+Exam Anxiety        	      Reflects the degree of nervousness or anxiety a student experiences before or during                                         examinations. High anxiety levels can affect academic outcomes and test performance.
 👥 Demographic and Lifestyle Factors
 
 Factor	                    Description
 Gender	                    Represents the student's gender. This variable is included for analytical purposes to examine                                potential differences in academic outcomes across groups.
-Age	                    Indicates the student's age in years. Age may influence learning styles, maturity, and                                       academic behavior.
-Part-Time Job       	Specifies whether the student is employed while studying. Balancing work and academic                                        responsibilities can impact study time and performance.
-Study Method	          Describes the student's preferred learning approach, such as self-study, group study, online                                 learning, or tutoring-based learning. Different methods may affect academic success.
-Diet Quality	          Measures the overall nutritional quality of the student's diet. Healthy eating habits can                                    support cognitive function, energy levels, and academic performance.
+Age	                        Indicates the student's age in years. Age may influence learning styles, maturity, and                                       academic behavior.
+Part-Time Job       	      Specifies whether the student is employed while studying. Balancing work and academic                                        responsibilities can impact study time and performance.
+Study Method	              Describes the student's preferred learning approach, such as self-study, group study, online                                 learning, or tutoring-based learning. Different methods may affect academic success.
+Diet Quality	              Measures the overall nutritional quality of the student's diet. Healthy eating habits can                                    support cognitive function, energy levels, and academic performance.
 Internet Quality	          Represents the reliability and speed of internet access available to the student. Good                                       internet connectivity is particularly important for online learning and research activities.
-Extracurricular Activities    Indicates participation in sports, clubs, volunteer work, or other non-academic activities.                                  Such activities may contribute to personal development, time management, and social skills.
-Family Income	          Represents the socioeconomic status of the student's household. Financial resources may                                      influence access to educational materials, learning opportunities, and support systems.
+Extracurricular Activities  Indicates participation in sports, clubs, volunteer work, or other non-academic activities.                                  Such activities may contribute to personal development, time management, and social skills.
+Family Income	              Represents the socioeconomic status of the student's household. Financial resources may                                      influence access to educational materials, learning opportunities, and support systems.
 🛠️ Tools and Technologies
 
 Programming Language
@@ -125,7 +125,7 @@ Visualize feature relationships.
 Identify significant predictors.
 4. Model Training
 
-The machine learning model is trained using:
+The machine/Deep learning model is trained using:
 
 🤖 Machine Learning Models Used
 🌲 Random Forest
@@ -243,7 +243,9 @@ Use in Project:
 Explored as an advanced deep learning approach for student academic performance prediction.
 
 The deep learning model is trained using:
+
 🧠 Deep Learning Models Evaluated
+
 🔗 Residual Neural Network (ResNet-style)
 
 Description:
