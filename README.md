@@ -24,6 +24,7 @@ Predict student academic performance using machine/Deep learning algorithms.
 Identify key factors affecting academic success.
 Provide data-driven insights to educators and institutions.
 Support early intervention strategies for improving student outcomes.
+
 📊 Dataset
 
 The project uses the Student Academic Behavior Dataset, which contains information related to:
@@ -32,26 +33,39 @@ Academic factors
 
 
 Attendance records
+
 Study hours
+
 previous gpa
+
 Tutoring Sessions / Week
 
 wellbeing fectors 
 
 Sleep Hours / Night
+
 Stress Level
+
 Screen Time / Day
+
 Exam Anxiety 
 
 Demographic factors 
 
 gender 
+
 age
+
 part-time job
+
 study method
+
 diet quality 
+
 internet quality
+
 Extracurricular
+
 family income
 
 📊 Dataset Feature Descriptions
@@ -90,24 +104,35 @@ Python
 Libraries
 
 Pandas
+
 NumPy
+
 Scikit-learn
+
 Matplotlib
+
 Seaborn
+
 Joblib/Pickle
 
 Web Development
 
 HTML
+
 CSS
+
 Flask
 
 Development Environment
 
 VS Code
+
 Jupyter Notebook
+
 Version Control
+
 Git
+
 GitHub
 
 🔬 Methodology
@@ -128,6 +153,7 @@ Identify significant predictors.
 The machine/Deep learning model is trained using:
 
 🤖 Machine Learning Models Used
+
 🌲 Random Forest
 
 Description:
