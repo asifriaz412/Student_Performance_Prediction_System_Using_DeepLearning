@@ -1,4 +1,5 @@
 🎓 Student Academic Performance Prediction Using Deep Learning
+
 📌 Project Title
 
 Student Academic Performance Prediction Using Deep Learning and Behavioral Data Analysis
@@ -444,6 +445,12 @@ Assignment completion significantly influences final grades.
 Student engagement and participation contribute to academic success.
 Historical academic records are strong predictors of future performance.
 📊 Dashboard / Model Output
+
+<img width="960" height="365" alt="image" src="https://github.com/user-attachments/assets/f493ab5f-c7a7-474a-b03c-c0821d9499b6" />
+
+<img width="958" height="415" alt="image" src="https://github.com/user-attachments/assets/6fbf98d7-8019-470c-8e93-d48d2468a329" />
+
+
 
 The system provides:
 
