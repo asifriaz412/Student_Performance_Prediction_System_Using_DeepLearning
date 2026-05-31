@@ -77,6 +77,7 @@ Attendance Records    	    Measures the percentage of classes attended by a stud
 Study Hours         	      Represents the average number of hours a student spends studying per day or week. Consistent                                 study habits typically contribute to better learning outcomes.
 Previous GPA	              Indicates the student's cumulative Grade Point Average from prior academic periods. It serves                                as a strong predictor of future academic achievement.
 Tutoring Sessions per Week  Refers to the number of tutoring or academic support sessions attended weekly. Additional                                    academic assistance may improve understanding and performance.
+
 🧠 Well-Being Factors
 
 Factor	                    Description
@@ -84,7 +85,9 @@ Sleep Hours per Night 	    Represents the average number of hours a student slee
 Stress Level        	      Measures the level of academic or personal stress experienced by a student, typically                                        categorized as low, medium, or high. Excessive stress may negatively impact learning and                                     performance.
 Screen Time per Day	        Indicates the average number of hours spent using electronic devices such as smartphones,                                    computers, or tablets. Excessive screen time may affect study habits and sleep quality.
 Exam Anxiety        	      Reflects the degree of nervousness or anxiety a student experiences before or during                                         examinations. High anxiety levels can affect academic outcomes and test performance.
+
 👥 Demographic and Lifestyle Factors
+
 
 Factor	                    Description
 Gender	                    Represents the student's gender. This variable is included for analytical purposes to examine                                potential differences in academic outcomes across groups.
