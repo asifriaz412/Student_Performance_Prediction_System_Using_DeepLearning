@@ -374,6 +374,7 @@ Use Case:
 Efficient prediction of academic outcomes.
 
 🔄 Sequence and Convolution Models
+
 🔁 BiLSTM + GRU
 
 Description:
@@ -478,7 +479,7 @@ Student engagement and participation contribute to academic success.
 Historical academic records are strong predictors of future performance.
 
 
-📊 Dashboard / Model Output
+📊 Dashboard
 
 <img width="960" height="365" alt="image" src="https://github.com/user-attachments/assets/f493ab5f-c7a7-474a-b03c-c0821d9499b6" />
 
