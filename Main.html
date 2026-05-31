@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>EduAI Predict — Student Performance Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg0:#03040f;--bg1:#060818;--bg2:#0a0e22;--bg3:#0e142e;--bg4:#141c3a;
+  --glass:rgba(14,20,46,.7);--glass2:rgba(20,28,58,.5);
+  --border:rgba(99,160,255,.08);--border2:rgba(99,160,255,.18);--border3:rgba(99,160,255,.4);
+  --t1:#e8f0ff;--t2:#7a9acc;--t3:#3a4e70;
+  --blue:#4d8bff;--cyan:#00f5d4;--pink:#ff5da2;--amber:#ffbe3d;--green:#00e09a;--red:#ff4060;--violet:#b06eff;
+  --grad1:linear-gradient(135deg,#4d8bff 0%,#00f5d4 100%);
+  --grad2:linear-gradient(135deg,#ff5da2,#ffbe3d);
+  --grad3:linear-gradient(135deg,#b06eff,#4d8bff);
+  --glow:0 0 60px rgba(77,139,255,.18);--glow2:0 0 40px rgba(0,245,212,.12);
+  --r:14px;--rs:9px;--nav:64px;--tr:.2s ease;
+  --shadow:0 24px 80px rgba(0,0,0,.8);
+  --ff-d:'Outfit',sans-serif;--ff-m:'JetBrains Mono',monospace;--ff-s:'Playfair Display',serif;
+}
+[data-theme="light"]{
+  --bg0:#f0f4ff;--bg1:#fff;--bg2:#f5f8ff;--bg3:#eaf0ff;--bg4:#dce8ff;
+  --glass:rgba(255,255,255,.8);--glass2:rgba(240,244,255,.6);
+  --border:rgba(77,139,255,.1);--border2:rgba(77,139,255,.2);--border3:rgba(77,139,255,.4);
+  --t1:#06102a;--t2:#1e3a7a;--t3:#8aa6d4;
+  --shadow:0 8px 40px rgba(77,139,255,.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--ff-d);background:var(--bg0);color:var(--t1);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 70% 60% at 15% 5%,rgba(77,139,255,.07),transparent),
+              radial-gradient(ellipse 50% 70% at 85% 95%,rgba(0,245,212,.05),transparent),
+              radial-gradient(ellipse 40% 40% at 50% 50%,rgba(176,110,255,.03),transparent);
+  pointer-events:none;animation:bgPulse 12s ease-in-out infinite alternate}
+@keyframes bgPulse{0%{opacity:1}100%{opacity:.6}}
+body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234d8bff' fill-opacity='0.02'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity:.6}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+a{text-decoration:none;color:inherit}
+input,select,button,textarea{font-family:var(--ff-d)}
+code{font-family:var(--ff-m);font-size:.88em;background:rgba(77,139,255,.12);padding:1px 6px;border-radius:4px}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:900;height:var(--nav);
+  background:rgba(3,4,15,.9);backdrop-filter:blur(32px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 22px;gap:10px}
+[data-theme="light"] .nav{background:rgba(255,255,255,.92)}
+.nav-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:8px}
+.nav-logo{width:38px;height:38px;border-radius:11px;background:var(--grad1);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:var(--glow);position:relative;overflow:hidden}
+.nav-logo::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);border-radius:11px}
+.nav-name{font-size:16px;font-weight:800;background:var(--grad1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.4px}
+.nav-links{display:flex;align-items:center;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
+.nl{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:var(--rs);color:var(--t2);font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:none;white-space:nowrap;transition:all var(--tr);letter-spacing:-.1px}
+.nl:hover{color:var(--t1);background:rgba(77,139,255,.08)}
+.nl.active{color:var(--blue);background:rgba(77,139,255,.12)}
+.nav-r{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
+.nb{width:36px;height:36px;border-radius:var(--rs);border:1px solid var(--border);background:transparent;color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all var(--tr)}
+.nb:hover{color:var(--t1);border-color:var(--border2);background:var(--bg3)}
+.status-pill{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:700;font-family:var(--ff-m);padding:5px 12px;border-radius:20px;border:1px solid;white-space:nowrap;cursor:pointer;transition:all var(--tr)}
+.status-pill.on{color:var(--green);border-color:rgba(0,224,154,.25);background:rgba(0,224,154,.07)}
+.status-pill.off{color:var(--red);border-color:rgba(255,64,96,.25);background:rgba(255,64,96,.07)}
+.status-pill.checking{color:var(--amber);border-color:rgba(255,190,61,.25);background:rgba(255,190,61,.07)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-on{background:var(--green);animation:blink 2s infinite}
+.dot-off{background:var(--red)}
+.dot-chk{background:var(--amber);animation:blink .6s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.hbg{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none}
+.hbg span{display:block;width:18px;height:2px;background:var(--t2);border-radius:2px;transition:all .25s}
+.hbg.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hbg.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.hbg.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.mdrawer{position:fixed;top:var(--nav);left:0;right:0;z-index:850;background:var(--bg1);border-bottom:1px solid var(--border);padding:10px 14px 20px;transform:translateY(-110%);opacity:0;transition:transform .28s ease,opacity .28s;pointer-events:none}
+.mdrawer.open{transform:none;opacity:1;pointer-events:all}
+.ml{display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:var(--r);color:var(--t2);font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:all var(--tr)}
+.ml:hover,.ml.active{background:var(--bg3);color:var(--t1)}
+.ml.active{color:var(--blue)}
+
+/* LAYOUT */
+.main{max-width:1380px;margin:0 auto;padding:28px 18px 90px;position:relative;z-index:1}
+.page{display:none}
+.page.active{display:block;animation:pgIn .3s ease}
+@keyframes pgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.g{display:grid;gap:14px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g7030{grid-template-columns:68fr 32fr}
+.mb1{margin-bottom:8px}.mb2{margin-bottom:14px}.mb3{margin-bottom:22px}.mb4{margin-bottom:32px}
+@media(max-width:900px){.g2,.g3,.g4,.g7030{grid-template-columns:1fr}}
+@media(max-width:580px){.g4{grid-template-columns:1fr 1fr}}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;transition:border-color var(--tr),box-shadow var(--tr);position:relative;overflow:hidden}
+.card:hover{border-color:var(--border2)}
+.card-glass{background:var(--glass);backdrop-filter:blur(20px)}
+.card-sm{padding:13px}
+.card-title{font-size:14px;font-weight:700;color:var(--t1);letter-spacing:-.2px}
+.card-sub{font-size:10.5px;color:var(--t3);margin-top:2px}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+
+/* HERO */
+.hero{position:relative;border:1px solid var(--border);border-radius:20px;padding:52px 48px;overflow:hidden;margin-bottom:24px;background:linear-gradient(135deg,var(--bg2) 0%,var(--bg3) 100%)}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 90% at 88% 50%,rgba(77,139,255,.09),transparent),radial-gradient(ellipse 40% 60% at 8% 8%,rgba(0,245,212,.06),transparent),radial-gradient(ellipse 30% 40% at 50% 100%,rgba(176,110,255,.05),transparent);pointer-events:none}
+.hero::after{content:'';position:absolute;top:-50%;right:-10%;width:400px;height:400px;background:radial-gradient(ellipse,rgba(77,139,255,.06),transparent 70%);pointer-events:none}
+.hero-kicker{display:inline-flex;align-items:center;gap:7px;background:rgba(77,139,255,.1);border:1px solid rgba(77,139,255,.22);border-radius:20px;padding:4px 14px;font-size:9.5px;font-weight:700;color:var(--blue);margin-bottom:16px;letter-spacing:.1em;text-transform:uppercase;font-family:var(--ff-m)}
+.hero-h{font-size:clamp(26px,4vw,54px);font-weight:900;line-height:1.04;letter-spacing:-2px;margin-bottom:14px;font-family:var(--ff-d)}
+.hero-h span{background:var(--grad1);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-p{font-size:14px;color:var(--t2);max-width:520px;line-height:1.8;margin-bottom:28px}
+.hero-btns{display:flex;gap:10px;flex-wrap:wrap}
+.hero-floaters{position:absolute;right:48px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px}
+.hfp{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--border2);border-radius:13px;padding:14px 18px;display:flex;align-items:center;gap:12px;min-width:170px;transition:transform var(--tr)}
+.hfp:nth-child(1){animation:float 4s ease-in-out infinite}
+.hfp:nth-child(2){animation:float 4s ease-in-out 1.4s infinite}
+.hfp:nth-child(3){animation:float 4s ease-in-out 2.8s infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.hfp-val{font-size:22px;font-weight:900;color:var(--t1);line-height:1;letter-spacing:-1px}
+.hfp-lbl{font-size:9.5px;color:var(--t3);margin-top:2px}
+@media(max-width:820px){.hero-floaters{display:none}.hero{padding:28px 24px}}
+
+/* STAT CARDS */
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;display:flex;align-items:center;gap:14px;border-left:3px solid var(--c,var(--blue));transition:all var(--tr);cursor:default}
+.sc:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--border2)}
+.sc-ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.sc-v{font-size:30px;font-weight:900;color:var(--t1);line-height:1;letter-spacing:-1.5px;font-family:var(--ff-d)}
+.sc-l{font-size:10.5px;color:var(--t3);margin-top:2px}
+.sc-trend{font-size:9px;font-family:var(--ff-m);margin-top:3px}
+
+/* BTNS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:11px 22px;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all var(--tr);letter-spacing:-.1px}
+.btn-primary{background:var(--grad1);color:#fff;box-shadow:var(--glow)}
+.btn-primary:hover{opacity:.85;transform:translateY(-2px);box-shadow:0 14px 40px rgba(77,139,255,.4)}
+.btn-primary:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{background:transparent;color:var(--t2);border:1px solid var(--border2)}
+.btn-ghost:hover{color:var(--t1);border-color:var(--blue);background:rgba(77,139,255,.06)}
+.btn-danger{background:transparent;color:var(--red);border:1px solid rgba(255,64,96,.25)}
+.btn-danger:hover{background:rgba(255,64,96,.08)}
+.btn-sm{padding:7px 14px;font-size:11.5px;border-radius:var(--rs)}
+.pred-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:15px 36px;border-radius:var(--r);background:var(--grad1);color:#fff;border:none;cursor:pointer;font-size:15px;font-weight:800;transition:all var(--tr);box-shadow:var(--glow);white-space:nowrap;letter-spacing:-.2px;min-width:200px;position:relative;overflow:hidden}
+.pred-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.1),transparent);transition:opacity var(--tr)}
+.pred-btn:hover{transform:translateY(-3px);box-shadow:0 16px 50px rgba(77,139,255,.5)}
+.pred-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+
+/* CHIPS */
+.chip{display:inline-flex;align-items:center;gap:3px;padding:3px 10px;border-radius:20px;font-size:9.5px;font-weight:700;letter-spacing:.05em;border:1px solid;font-family:var(--ff-m)}
+.chip-b{background:rgba(77,139,255,.1);color:var(--blue);border-color:rgba(77,139,255,.25)}
+.chip-c{background:rgba(0,245,212,.08);color:var(--cyan);border-color:rgba(0,245,212,.2)}
+.chip-g{background:rgba(0,224,154,.08);color:var(--green);border-color:rgba(0,224,154,.2)}
+.chip-a{background:rgba(255,190,61,.08);color:var(--amber);border-color:rgba(255,190,61,.2)}
+.chip-r{background:rgba(255,64,96,.08);color:var(--red);border-color:rgba(255,64,96,.2)}
+.chip-p{background:rgba(176,110,255,.08);color:var(--violet);border-color:rgba(176,110,255,.2)}
+.chip-pk{background:rgba(255,93,162,.08);color:var(--pink);border-color:rgba(255,93,162,.2)}
+
+/* FORM */
+.fi,.fs{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);color:var(--t1);padding:10px 13px;font-size:12.5px;width:100%;outline:none;transition:border-color var(--tr),box-shadow var(--tr)}
+.fi:focus,.fs:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(77,139,255,.12)}
+.fi::placeholder{color:var(--t3)}
+.fs option{background:var(--bg2)}
+label.fl{font-size:11px;color:var(--t2);font-weight:600;display:block;margin-bottom:5px;letter-spacing:.03em;text-transform:uppercase}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:460px){.fgrid{grid-template-columns:1fr}}
+
+/* Sliders */
+.sl-wrap{margin-bottom:18px}
+.sl-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.sl-lbl{font-size:12px;color:var(--t2);font-weight:600}
+.sl-val{font-size:13px;font-weight:700;color:var(--blue);font-family:var(--ff-m)}
+.sl-desc{font-size:9.5px;color:var(--t3);margin-top:3px}
+input[type=range]{width:100%;height:5px;border-radius:10px;appearance:none;-webkit-appearance:none;background:linear-gradient(to right,var(--blue) var(--pct,50%),rgba(77,139,255,.15) var(--pct,50%));cursor:pointer;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--blue);cursor:pointer;box-shadow:0 0 0 4px rgba(77,139,255,.2),0 2px 8px rgba(0,0,0,.4);transition:box-shadow var(--tr),transform var(--tr)}
+input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 0 8px rgba(77,139,255,.25);transform:scale(1.1)}
+.ticks{display:flex;justify-content:space-between;font-size:8.5px;color:var(--t3);margin-top:3px;font-family:var(--ff-m)}
+
+/* Collapsible */
+.fsec{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color var(--tr)}
+.fsec:hover{border-color:var(--border2)}
+.fhd{display:flex;align-items:center;gap:10px;padding:15px 18px;cursor:pointer;user-select:none;transition:background var(--tr)}
+.fhd:hover{background:rgba(77,139,255,.04)}
+.fhd-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.fhd-ttl{font-size:13.5px;font-weight:700;color:var(--t1);flex:1;letter-spacing:-.2px}
+.fhd-cnt{font-size:10px;color:var(--t3);font-family:var(--ff-m)}
+.fhd-arr{font-size:16px;color:var(--t3);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.fsec.open .fhd-arr{transform:rotate(45deg)}
+.fsec.open .fhd{border-bottom:1px solid var(--border)}
+.fbd{max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.4,0,.2,1);padding:0 18px}
+.fsec.open .fbd{max-height:1000px;padding:18px}
+
+/* ALERTS */
+.alert{border-radius:var(--rs);padding:12px 16px;border:1px solid;font-size:12.5px;display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;line-height:1.6}
+.alert i{flex-shrink:0;margin-top:2px}
+.alert-info{background:rgba(77,139,255,.07);border-color:rgba(77,139,255,.2);color:var(--blue)}
+.alert-danger{background:rgba(255,64,96,.07);border-color:rgba(255,64,96,.2);color:var(--red)}
+.alert-success{background:rgba(0,224,154,.07);border-color:rgba(0,224,154,.2);color:var(--green)}
+.alert-warn{background:rgba(255,190,61,.07);border-color:rgba(255,190,61,.2);color:var(--amber)}
+
+/* Grade badges */
+.gb{display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;padding:2px 9px;border-radius:20px;border:1px solid;font-family:var(--ff-d)}
+.gA,.g-A{background:rgba(0,224,154,.12);color:var(--green);border-color:rgba(0,224,154,.3)}
+.gB,.g-B{background:rgba(77,139,255,.12);color:var(--blue);border-color:rgba(77,139,255,.3)}
+.gC,.g-C{background:rgba(255,190,61,.12);color:var(--amber);border-color:rgba(255,190,61,.3)}
+.gD,.g-D{background:rgba(255,93,162,.12);color:var(--pink);border-color:rgba(255,93,162,.3)}
+.gF,.g-F,.g-Fail{background:rgba(255,64,96,.12);color:var(--red);border-color:rgba(255,64,96,.3)}
+
+/* Risk badges — BINARY: At Risk / Not At Risk */
+.r-AtRisk{background:rgba(255,64,96,.12);color:var(--red);border-color:rgba(255,64,96,.3)}
+.r-NotAtRisk{background:rgba(0,224,154,.12);color:var(--green);border-color:rgba(0,224,154,.3)}
+
+/* PREDICT BAR */
+.pbar-container{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px;margin-bottom:22px;display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;position:relative;overflow:hidden}
+.pbar-container::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(77,139,255,.03),rgba(0,245,212,.02));pointer-events:none}
+
+/* RESULT PANEL */
+.res-ph{text-align:center;padding:80px 20px}
+.res-ph-icon{font-size:64px;margin-bottom:16px;animation:breathe 3s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+/* Grade Big Card */
+.grade-big{text-align:center;padding:28px;border-radius:var(--r);border:2px solid;position:relative;overflow:hidden}
+.grade-big::before{content:'';position:absolute;inset:0;opacity:.06;pointer-events:none}
+.grade-letter{font-family:var(--ff-s);font-size:88px;font-weight:800;line-height:1;display:block;animation:gradeReveal .6s cubic-bezier(.34,1.56,.64,1)}
+@keyframes gradeReveal{from{transform:scale(0.4) rotate(-10deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.conf-track{height:6px;background:rgba(255,255,255,.08);border-radius:10px;margin-top:12px;overflow:hidden}
+.conf-fill{height:100%;border-radius:10px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+
+/* Risk card */
+.risk-card{text-align:center;padding:20px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg3)}
+.risk-ico{font-size:36px;margin-bottom:8px;display:block;animation:riskReveal .5s .2s both cubic-bezier(.34,1.56,.64,1)}
+@keyframes riskReveal{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* Probability bars */
+.prob-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;animation:slideIn .5s both}
+@keyframes slideIn{from{transform:translateX(-15px);opacity:0}to{transform:none;opacity:1}}
+.pr-grade{width:28px;text-align:center;font-weight:900;font-size:12px;font-family:var(--ff-d)}
+.pr-track{flex:1;height:9px;background:rgba(255,255,255,.05);border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.04)}
+.pr-fill{height:100%;border-radius:10px;transition:width 1s cubic-bezier(.2,0,.2,1)}
+.pr-pct{font-size:10px;color:var(--t3);font-family:var(--ff-m);width:42px;text-align:right}
+
+/* FI rows */
+.fi-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.fi-lbl{font-size:11px;color:var(--t2);width:185px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi-track{flex:1;height:5px;background:rgba(77,139,255,.1);border-radius:10px;overflow:hidden}
+.fi-fill{height:100%;border-radius:10px;background:var(--grad1);transition:width 1.4s cubic-bezier(.2,0,.2,1)}
+.fi-pct{font-size:9.5px;color:var(--t3);font-family:var(--ff-m);width:36px;text-align:right}
+
+/* Suggestions */
+.sug-item{display:flex;gap:10px;padding:12px 15px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:8px;border-left:3px solid;animation:slideUp .4s both}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.sug-item.high{border-left-color:var(--red)}
+.sug-item.medium{border-left-color:var(--amber)}
+.sug-item.low{border-left-color:var(--green)}
+.sug-ico{font-size:18px;flex-shrink:0}
+.sug-txt{font-size:12px;color:var(--t2);line-height:1.6}
+
+/* Waterfall */
+.wf-row{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.wf-lbl{font-size:11px;color:var(--t2);width:195px;flex-shrink:0}
+.wf-bar-wrap{flex:1;height:22px;position:relative;display:flex;align-items:center}
+.wf-mid{position:absolute;left:50%;width:1px;height:100%;background:var(--border2)}
+.wf-neg{position:absolute;right:50%;height:60%;background:rgba(255,64,96,.5);border-right:2px solid var(--red);border-radius:3px 0 0 3px;transition:width 1s ease}
+.wf-pos{position:absolute;left:50%;height:60%;background:rgba(0,224,154,.5);border-left:2px solid var(--green);border-radius:0 3px 3px 0;transition:width 1s ease}
+.wf-val{font-size:10px;font-family:var(--ff-m);width:46px;text-align:right}
+
+/* Model performance table */
+.mpt{width:100%;border-collapse:collapse}
+.mpt th{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);padding:9px 11px;text-align:left;border-bottom:1px solid var(--border);font-family:var(--ff-m);white-space:nowrap}
+.mpt td{padding:8px 11px;font-size:12px;color:var(--t2);border-bottom:1px solid rgba(77,139,255,.04);transition:background var(--tr)}
+.mpt tbody tr:hover td{background:rgba(77,139,255,.05);color:var(--t1)}
+.mpt .best td{background:rgba(0,224,154,.04)!important}
+.mpt .best td:first-child{border-left:3px solid var(--green)}
+.perf-bar{height:5px;background:rgba(77,139,255,.1);border-radius:10px;overflow:hidden;width:65px;display:inline-block;vertical-align:middle;margin-right:6px}
+.perf-fill{height:100%;border-radius:10px;background:var(--grad1)}
+
+/* Table */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.dt{width:100%;border-collapse:collapse;min-width:560px}
+table.dt th{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);padding:9px 11px;text-align:left;border-bottom:1px solid var(--border);font-family:var(--ff-m);white-space:nowrap}
+table.dt td{padding:8px 11px;font-size:11.5px;color:var(--t2);border-bottom:1px solid rgba(77,139,255,.04)}
+table.dt tbody tr:hover td{background:rgba(77,139,255,.04);color:var(--t1)}
+.mono{font-family:var(--ff-m);font-size:10.5px}
+.tbl-ctrl{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.tbl-s{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);color:var(--t1);font-size:11.5px;padding:6px 11px;outline:none;min-width:120px}
+.tbl-s::placeholder{color:var(--t3)}
+.tbl-sel{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);color:var(--t2);font-size:11px;padding:6px 8px;outline:none;cursor:pointer}
+
+/* Upload */
+.upz{border:2px dashed var(--border2);border-radius:var(--r);padding:36px;text-align:center;cursor:pointer;transition:all var(--tr);background:rgba(77,139,255,.02)}
+.upz:hover,.upz.drag{border-color:var(--blue);background:rgba(77,139,255,.06)}
+.upz-ico{font-size:44px;color:var(--t3);margin-bottom:12px}
+.upz-ttl{font-size:14px;font-weight:700;color:var(--t1)}
+.upz-sub{font-size:10.5px;color:var(--t3);margin-top:4px;max-width:460px;margin-left:auto;margin-right:auto;line-height:1.6}
+.prog-wrap{height:5px;background:rgba(77,139,255,.1);border-radius:10px;overflow:hidden;margin-top:10px}
+.prog-fill{height:100%;border-radius:10px;background:var(--grad1);transition:width .3s}
+
+/* Share btns */
+.share-btn{display:flex;align-items:center;gap:6px;padding:9px 15px;border-radius:var(--rs);border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:12px;font-weight:600;cursor:pointer;transition:all var(--tr)}
+.share-btn:hover{border-color:var(--c,var(--blue));color:var(--c,var(--blue));background:rgba(77,139,255,.06)}
+.share-btn.wa{--c:#25D366}.share-btn.fb{--c:#1877F2}.share-btn.tw{--c:#1DA1F2}.share-btn.li{--c:#0077B5}.share-btn.copy{--c:var(--cyan)}
+
+/* Chat */
+.chat-ov{position:fixed;inset:0;z-index:990;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s}
+.chat-ov.open{opacity:1;pointer-events:all}
+.chat-panel{position:fixed;bottom:0;right:0;top:var(--nav);z-index:995;width:375px;background:var(--bg1);border-left:1px solid var(--border);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);box-shadow:-16px 0 60px rgba(0,0,0,.6)}
+.chat-panel.open{transform:none}
+.ch-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--bg2)}
+.ch-av{width:40px;height:40px;border-radius:50%;background:var(--grad1);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;flex-shrink:0;box-shadow:var(--glow)}
+.ch-title{font-size:14px;font-weight:800;color:var(--t1)}
+.ch-sub{font-size:9.5px;color:var(--green);margin-top:1px;display:flex;align-items:center;gap:4px}
+.ch-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:7px}
+.ch-msg{display:flex}
+.ch-msg.user{justify-content:flex-end}
+.ch-bub{max-width:88%;padding:10px 14px;border-radius:14px;font-size:12px;line-height:1.65}
+.ch-msg.ai .ch-bub{background:var(--bg3);border:1px solid var(--border);color:var(--t2);border-radius:4px 14px 14px 14px}
+.ch-msg.user .ch-bub{background:var(--grad1);color:#fff;border-radius:14px 14px 4px 14px}
+.ch-typing{display:flex;align-items:center;gap:4px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:4px 14px 14px 14px;width:62px}
+.ch-dot{width:5px;height:5px;border-radius:50%;background:var(--t3);animation:tDot .9s ease-in-out infinite}
+.ch-dot:nth-child(2){animation-delay:.2s}.ch-dot:nth-child(3){animation-delay:.4s}
+@keyframes tDot{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.ch-scs{display:flex;flex-wrap:wrap;gap:4px;padding:8px 12px;border-top:1px solid var(--border)}
+.ch-sc{font-size:9.5px;padding:4px 11px;border-radius:20px;cursor:pointer;background:rgba(77,139,255,.08);color:var(--blue);border:1px solid rgba(77,139,255,.18);transition:all var(--tr)}
+.ch-sc:hover{background:rgba(77,139,255,.2)}
+.ch-inp-row{display:flex;gap:7px;padding:10px 12px;border-top:1px solid var(--border)}
+.ch-inp{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:8px 12px;font-size:12.5px;color:var(--t1);outline:none;transition:border-color var(--tr)}
+.ch-inp:focus{border-color:var(--blue)}
+.ch-inp::placeholder{color:var(--t3)}
+.ch-send{width:38px;height:38px;border-radius:var(--rs);background:var(--grad1);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform var(--tr)}
+.ch-send:hover{transform:scale(1.1)}
+.ch-close{margin-left:auto;background:none;border:none;color:var(--t3);cursor:pointer;font-size:18px;padding:2px;transition:color var(--tr)}
+.ch-close:hover{color:var(--t1)}
+@media(max-width:480px){.chat-panel{width:100%}}
+
+/* Toast */
+.toast-wrap{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{display:flex;align-items:center;gap:9px;padding:11px 16px;border-radius:var(--rs);background:var(--bg2);border:1px solid var(--border2);box-shadow:0 10px 40px rgba(0,0,0,.6);font-size:12px;color:var(--t1);transform:translateX(130%);transition:transform .32s cubic-bezier(.4,0,.2,1);max-width:290px;pointer-events:all}
+.toast.show{transform:none}
+.toast.success{border-color:rgba(0,224,154,.35);background:rgba(0,224,154,.08)}
+.toast.error{border-color:rgba(255,64,96,.35);background:rgba(255,64,96,.08)}
+.toast.info{border-color:rgba(77,139,255,.35);background:rgba(77,139,255,.08)}
+
+/* Spinner */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .55s linear infinite;flex-shrink:0}
+
+/* Offline banner */
+.offline-banner{display:none;position:sticky;top:var(--nav);z-index:800;background:rgba(255,64,96,.09);border-bottom:1px solid rgba(255,64,96,.2);padding:10px 22px;align-items:center;gap:12px;font-size:12.5px;color:#ff7090}
+.offline-banner.show{display:flex}
+.ob-retry{margin-left:auto;display:flex;align-items:center;gap:6px;padding:5px 14px;border:1px solid rgba(255,64,96,.3);border-radius:20px;cursor:pointer;background:transparent;color:#ff7090;font-size:11px;font-weight:700;transition:all var(--tr)}
+.ob-retry:hover{background:rgba(255,64,96,.15)}
+
+/* Responsive */
+@media(max-width:768px){
+  .nav{padding:0 14px}
+  .nav-links{display:none}
+  .hbg{display:flex}
+  .main{padding:14px 12px 70px}
+  .pbar-container{flex-direction:column;align-items:stretch}
+  .pred-btn{width:100%}
+}
+@media(max-width:460px){
+  .hero-btns{flex-direction:column}
+  .hero-btns .btn{width:100%;justify-content:center}
+}
+
+/* Features grid */
+.feat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;transition:all var(--tr)}
+.feat-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.feat-ico{font-size:28px;margin-bottom:11px}
+.feat-ttl{font-size:13.5px;font-weight:700;color:var(--t1);margin-bottom:6px;letter-spacing:-.2px}
+.feat-txt{font-size:12px;color:var(--t2);line-height:1.75}
+
+/* History items */
+.hist-row{animation:slideUp .3s both}
+</style>
+</head>
+<body>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-logo">🎓</div>
+    <span class="nav-name">EduAI Predict</span>
+  </div>
+  <div class="nav-links">
+    <button class="nl active" onclick="nav('dash',this)"><i class="bi bi-grid-1x2-fill"></i> Dashboard</button>
+    <button class="nl" onclick="nav('student',this)"><i class="bi bi-person-badge-fill"></i> Student</button>
+    <button class="nl" onclick="nav('teacher',this)"><i class="bi bi-mortarboard-fill"></i> Teacher</button>
+    <button class="nl" onclick="nav('models',this)"><i class="bi bi-bar-chart-fill"></i> Model Performance</button>
+    <button class="nl" onclick="nav('explain',this)"><i class="bi bi-diagram-3-fill"></i> Explainability</button>
+    <button class="nl" onclick="nav('history',this)"><i class="bi bi-clock-history"></i> History</button>
+    <button class="nl" onclick="nav('about',this)"><i class="bi bi-info-circle-fill"></i> About</button>
+  </div>
+  <div class="nav-r">
+    <div class="status-pill off" id="statusPill" onclick="checkServer(true)" title="Click to retry connection">
+      <span class="dot dot-off" id="statusDot"></span>
+      <span id="statusTxt">Offline</span>
+    </div>
+    <button class="nb" onclick="toggleTheme()" id="themeBtn" title="Toggle theme"><i class="bi bi-moon-stars-fill"></i></button>
+    <button class="btn btn-primary btn-sm" onclick="openChat()"><i class="bi bi-robot"></i> AI Chat</button>
+    <button class="hbg" id="hbg" onclick="toggleMobile()"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<div class="mdrawer" id="mdrawer">
+  <button class="ml active" onclick="nav('dash');closeMobile()"><i class="bi bi-grid-1x2-fill"></i> Dashboard</button>
+  <button class="ml" onclick="nav('student');closeMobile()"><i class="bi bi-person-badge-fill"></i> Student Panel</button>
+  <button class="ml" onclick="nav('teacher');closeMobile()"><i class="bi bi-mortarboard-fill"></i> Teacher Panel</button>
+  <button class="ml" onclick="nav('models');closeMobile()"><i class="bi bi-bar-chart-fill"></i> Model Performance</button>
+  <button class="ml" onclick="nav('explain');closeMobile()"><i class="bi bi-diagram-3-fill"></i> Explainability</button>
+  <button class="ml" onclick="nav('history');closeMobile()"><i class="bi bi-clock-history"></i> History</button>
+  <button class="ml" onclick="nav('about');closeMobile()"><i class="bi bi-info-circle-fill"></i> About</button>
+  <hr style="border:none;border-top:1px solid var(--border);margin:7px 0"/>
+  <button class="ml" onclick="openChat();closeMobile()"><i class="bi bi-robot"></i> AI Chat</button>
+</div>
+
+<div class="offline-banner" id="offlineBanner">
+  <i class="bi bi-wifi-off"></i>
+  <span><strong>Backend Offline</strong> — Real model predictions require Flask at <code>localhost:8000</code>. Running client-side simulation.</span>
+  <button class="ob-retry" onclick="checkServer(true)"><i class="bi bi-arrow-clockwise"></i> Retry</button>
+</div>
+
+<main class="main">
+
+<!-- ════ DASHBOARD ════ -->
+<section class="page active" id="sec-dash">
+  <div class="hero">
+    <div style="position:relative;max-width:580px">
+      <div class="hero-kicker"><i class="bi bi-stars"></i> FYP Research · 23 Models · 50K Records</div>
+      <h1 class="hero-h">Predict Student<br><span>Academic Performance</span></h1>
+      <p class="hero-p">23 AI models — Grade classifier, Binary Risk detector (At Risk / Not At Risk), and GPA regressor — trained on 50,000 student records with 16 behavioral and demographic features including 15 Deep Learning architectures.</p>
+      <div class="hero-btns">
+        <button class="btn btn-primary" onclick="nav('student')"><i class="bi bi-lightning-fill"></i> Run Prediction</button>
+        <button class="btn btn-ghost" onclick="nav('models')"><i class="bi bi-bar-chart-fill"></i> Model Performance</button>
+        <button class="btn btn-ghost" onclick="nav('explain')"><i class="bi bi-diagram-3-fill"></i> Explainability</button>
+      </div>
+    </div>
+    <div class="hero-floaters">
+      <div class="hfp"><div><div class="hfp-val">50,000</div><div class="hfp-lbl">Student Records</div></div><span style="font-size:26px">👥</span></div>
+      <div class="hfp"><div><div class="hfp-val" id="d-bestAcc">93.4%</div><div class="hfp-lbl">Best Risk Accuracy</div></div><span style="font-size:26px">🏆</span></div>
+      <div class="hfp"><div><div class="hfp-val">23</div><div class="hfp-lbl">AI Models</div></div><span style="font-size:26px">🤖</span></div>
+    </div>
+  </div>
+
+  <div class="g g4 mb3">
+    <div class="sc" style="--c:var(--blue)"><div class="sc-ico" style="background:rgba(77,139,255,.12);color:var(--blue)"><i class="bi bi-people-fill"></i></div><div><div class="sc-v">50K</div><div class="sc-l">Training Records</div><div class="sc-trend" style="color:var(--green)">▲ Real dataset</div></div></div>
+    <div class="sc" style="--c:var(--green)"><div class="sc-ico" style="background:rgba(0,224,154,.12);color:var(--green)"><i class="bi bi-trophy-fill"></i></div><div><div class="sc-v">12K</div><div class="sc-l">Grade A Students</div><div class="sc-trend" style="color:var(--green)">▲ 24% of dataset</div></div></div>
+    <div class="sc" style="--c:var(--red)"><div class="sc-ico" style="background:rgba(255,64,96,.12);color:var(--red)"><i class="bi bi-exclamation-triangle-fill"></i></div><div><div class="sc-v">16.5K</div><div class="sc-l">At-Risk Students</div><div class="sc-trend" style="color:var(--amber)">▼ 33% at risk</div></div></div>
+    <div class="sc" style="--c:var(--violet)"><div class="sc-ico" style="background:rgba(176,110,255,.12);color:var(--violet)"><i class="bi bi-cpu-fill"></i></div><div><div class="sc-v">23</div><div class="sc-l">Trained Models</div><div class="sc-trend" style="color:var(--cyan)">8 ML + 15 DL</div></div></div>
+  </div>
+
+  <div class="g g2 mb3">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Grade Distribution</div><div class="card-sub">50,000 training records</div></div><span class="chip chip-c">Dataset</span></div>
+      <div style="position:relative;height:220px"><canvas id="gradePieChart"></canvas></div>
+      <div id="gradeLeg" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:11px"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Top Model Accuracy</div><div class="card-sub">All 23 models — risk classification</div></div><span class="chip chip-b">Live</span></div>
+      <div style="position:relative;height:220px"><canvas id="modelPerfChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="g g2 mb3">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Feature Importance</div><span class="chip chip-b">RF Weights</span></div>
+      <div id="dashFI"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Risk Distribution</div><span class="chip chip-a">Dataset · Binary</span></div>
+      <div class="g g2 mb2" style="gap:9px">
+        <div style="text-align:center;padding:16px;border-radius:var(--r);border:1px solid rgba(255,64,96,.2);background:rgba(255,64,96,.05)"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">At Risk</div><div style="font-size:28px;font-weight:900;color:var(--red)">33%</div></div>
+        <div style="text-align:center;padding:16px;border-radius:var(--r);border:1px solid rgba(0,224,154,.2);background:rgba(0,224,154,.05)"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">Not At Risk</div><div style="font-size:28px;font-weight:900;color:var(--green)">67%</div></div>
+      </div>
+      <div style="position:relative;height:110px"><canvas id="riskDonut"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card mb3">
+    <div class="card-head">
+      <div><div class="card-title">Sample Student Records</div><div class="card-sub">Predicted with client-side Random Forest simulation</div></div>
+      <div class="tbl-ctrl">
+        <input class="tbl-s" id="tSearch" placeholder="Search student ID…" oninput="filterDashTbl()"/>
+        <select class="tbl-sel" id="gFiltD" onchange="filterDashTbl()"><option value="">All Grades</option><option>A</option><option>B</option><option>C</option><option>D</option><option>F</option></select>
+        <select class="tbl-sel" id="rFiltD" onchange="filterDashTbl()"><option value="">All Risk</option><option>At Risk</option><option>Not At Risk</option></select>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table class="dt"><thead><tr><th>ID</th><th>Hours/Day</th><th>Attend%</th><th>Prev GPA</th><th>Sleep</th><th>Stress</th><th>Anxiety</th><th>Actual Grade</th><th>Predicted</th><th>Risk</th><th>Pred GPA</th></tr></thead><tbody id="dashTbody"><tr><td colspan="11" style="text-align:center;padding:30px;color:var(--t3)">Loading…</td></tr></tbody></table></div>
+  </div>
+</section>
+
+<!-- ════ STUDENT ════ -->
+<section class="page" id="sec-student">
+  <div id="studentOfflineAlert" class="alert alert-warn mb2" style="display:none">
+    <i class="bi bi-wifi-off"></i>
+    <div><strong>Backend offline</strong> — Using client-side simulation. Results are approximations. Start Flask at port 8000 for real RF model predictions.</div>
+  </div>
+  <div class="alert alert-info mb2">
+    <i class="bi bi-info-circle-fill"></i>
+    <div>Expand the sections below, fill in your profile, choose a model, then click <strong>Predict Performance</strong>. Click <strong>Load Example</strong> to auto-fill with a sample profile.</div>
+  </div>
+
+  <div class="g g2 mb2">
+    <div class="fsec open" id="fs-acad">
+      <div class="fhd" onclick="toggleSec('fs-acad')">
+        <div class="fhd-ico" style="background:rgba(77,139,255,.12);color:var(--blue)">📚</div>
+        <span class="fhd-ttl">Academic Factors</span><span class="fhd-cnt">4 features</span>
+        <span class="fhd-arr"><i class="bi bi-plus-lg"></i></span>
+      </div>
+      <div class="fbd">
+        <div class="sl-wrap">
+          <div class="sl-head"><span class="sl-lbl">Hours Studied / Day</span><span class="sl-val" id="vHS">5.0 h</span></div>
+          <input type="range" id="sHS" min="0" max="12" step="0.1" value="5" oninput="rv('vHS',this,' h')"/>
+          <div class="ticks"><span>0h</span><span>3h</span><span>6h</span><span>9h</span><span>12h</span></div>
+          <div class="sl-desc">🔑 Top predictor. Target 6–8h daily using Pomodoro (25 min work + 5 min break).</div>
+        </div>
+        <div class="sl-wrap">
+          <div class="sl-head"><span class="sl-lbl">Attendance %</span><span class="sl-val" id="vAT">80%</span></div>
+          <input type="range" id="sAT" min="40" max="100" step="0.5" value="80" oninput="rv('vAT',this,'%')"/>
+          <div class="ticks"><span>40%</span><span>55%</span><span>70%</span><span>85%</span><span>100%</span></div>
+          <div class="sl-desc">Below 70% dramatically raises failure risk. Aim for 85%+.</div>
+        </div>
+        <div class="sl-wrap">
+          <div class="sl-head"><span class="sl-lbl">Previous GPA (0–4)</span><span class="sl-val" id="vGP">3.00</span></div>
+          <input type="range" id="sGP" min="0" max="4" step="0.01" value="3.0" oninput="rv('vGP',this,'')"/>
+          <div class="ticks"><span>0.0</span><span>1.0</span><span>2.0</span><span>3.0</span><span>4.0</span></div>
+          <div class="sl-desc">Strong indicator of academic momentum and study habits.</div>
+        </div>
+        <div class="sl-wrap">
+          <div class="sl-head"><span class="sl-lbl">Tutoring Sessions / Week</span><span class="sl-val" id="vTU">2</span></div>
+          <input type="range" id="sTU" min="0" max="10" step="1" value="2" oninput="rv('vTU',this,'')"/>
+          <div class="ticks"><span>0</span><span>2</span><span>5</span><span>7</span><span>10</span></div>
+          <div class="sl-desc">2+ sessions linked to +1.5 grade point improvement on average.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fsec open" id="fs-well">
+      <div class="fhd" onclick="toggleSec('fs-well')">
+        <div class="fhd-ico" style="background:rgba(0,224,154,.12);color:var(--green)">❤️</div>
+        <span class="fhd-ttl">Wellbeing Factors</span><span class="fhd-cnt">4 features</span>
+        <span class="fhd-arr"><i class="bi bi-plus-lg"></i></span>
+      </div>
+      <div class="fbd">
+        <div class="sl-wrap">
+          <div class="sl-head"><span class="sl-lbl">Sleep Hours / Night</span><span class="sl-val" id="vSL">7.0 h</span></div>
+          <input type="range" id="sSL" min="2" max="12" step="0.1" value="7" oninput="rv('vSL',this,' h')"/>
+          <div class="ticks"><span>2h</span><span>5h</span><span>7h</span><span>9h</span><span>12h</span></div>
+          <div class="sl-desc">7–8h optimal for memory consolidation and focus.</div>
+        </div>
+        <div class="sl-wrap">
+          <div class="sl-head"><span class="sl-lbl">Stress Level (0–10)</span><span class="sl-val" id="vST">5</span></div>
+          <input type="range" id="sST" min="0" max="10" step="0.1" value="5" oninput="rv('vST',this,'')"/>
+          <div class="ticks"><span>None</span><span>Low</span><span>Moderate</span><span>High</span><span>Extreme</span></div>
+          <div class="sl-desc">Stress above 8 significantly impacts academic performance.</div>
+        </div>
+        <div class="sl-wrap">
+          <div class="sl-head"><span class="sl-lbl">Screen Time / Day</span><span class="sl-val" id="vSC">3.0 h</span></div>
+          <input type="range" id="sSC" min="0" max="12" step="0.1" value="3" oninput="rv('vSC',this,' h')"/>
+          <div class="ticks"><span>0h</span><span>3h</span><span>6h</span><span>9h</span><span>12h</span></div>
+          <div class="sl-desc">Limit recreational screen time to under 2h/day for better focus.</div>
+        </div>
+        <div class="sl-wrap">
+          <div class="sl-head"><span class="sl-lbl">Exam Anxiety (0–10)</span><span class="sl-val" id="vEA">5</span></div>
+          <input type="range" id="sEA" min="0" max="10" step="0.1" value="5" oninput="rv('vEA',this,'')"/>
+          <div class="ticks"><span>Calm</span><span></span><span>Moderate</span><span></span><span>Severe</span></div>
+          <div class="sl-desc">2nd most influential predictor — practice mock tests regularly.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fsec" id="fs-demo">
+      <div class="fhd" onclick="toggleSec('fs-demo')">
+        <div class="fhd-ico" style="background:rgba(255,93,162,.12);color:var(--pink)">👤</div>
+        <span class="fhd-ttl">Demographics &amp; Lifestyle</span><span class="fhd-cnt">8 features</span>
+        <span class="fhd-arr"><i class="bi bi-plus-lg"></i></span>
+      </div>
+      <div class="fbd">
+        <div class="fgrid">
+          <div><label class="fl">Gender</label><select class="fs" id="sGender"><option value="male">Male</option><option value="female">Female</option></select></div>
+          <div><label class="fl">Age</label><input type="number" class="fi" id="sAge" value="20" min="15" max="40"/></div>
+          <div><label class="fl">Part-Time Job</label><select class="fs" id="sJob"><option value="no">No</option><option value="yes">Yes</option></select></div>
+          <div><label class="fl">Study Method</label><select class="fs" id="sMethod"><option value="offline">Offline</option><option value="online">Online</option><option value="hybrid">Hybrid</option></select></div>
+          <div><label class="fl">Diet Quality</label><select class="fs" id="sDiet"><option value="poor">Poor</option><option value="average" selected>Average</option><option value="good">Good</option></select></div>
+          <div><label class="fl">Internet Quality</label><select class="fs" id="sNet"><option value="poor">Poor</option><option value="average">Average</option><option value="good" selected>Good</option><option value="excellent">Excellent</option></select></div>
+          <div><label class="fl">Extracurricular</label><select class="fs" id="sExtra"><option value="no">No</option><option value="yes">Yes</option></select></div>
+          <div><label class="fl">Family Income</label><select class="fs" id="sIncome"><option value="low">Low</option><option value="middle" selected>Middle</option><option value="high">High</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="display:flex;flex-direction:column;gap:9px;justify-content:center">
+      <div style="font-size:14px;font-weight:800;color:var(--t1);margin-bottom:4px">⚡ Quick Actions</div>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="loadExample()"><i class="bi bi-shuffle"></i> Load Example Profile</button>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="openAllSecs()"><i class="bi bi-layout-text-window-reverse"></i> Expand All Sections</button>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="resetProfile()"><i class="bi bi-arrow-counterclockwise"></i> Reset to Defaults</button>
+      <hr style="border:none;border-top:1px solid var(--border);margin:2px 0"/>
+      <div style="font-size:10.5px;color:var(--t3);line-height:1.7">16 features power all 23 models. Risk output is binary: <strong style="color:var(--red)">At Risk</strong> or <strong style="color:var(--green)">Not At Risk</strong>.</div>
+    </div>
+  </div>
+
+  <!-- Predict bar -->
+  <div class="pbar-container">
+    <div style="flex:1;min-width:200px">
+      <label class="fl">Classical ML Model (8)</label>
+      <select class="fs" id="modelSelSk">
+        <optgroup label="Core">
+          <option value="random_forest" selected>🌲 Random Forest</option>
+          <option value="logistic_regression">📐 Logistic Regression</option>
+          <option value="gradient_boosting">🔥 Gradient Boosting</option>
+        </optgroup>
+        <optgroup label="Boosting Ensemble">
+          <option value="xgboost">⚡ XGBoost</option>
+          <option value="lightgbm">💡 LightGBM</option>
+          <option value="catboost">🐱 CatBoost</option>
+        </optgroup>
+        <optgroup label="Advanced">
+          <option value="stacking">🏗️ Stacking Ensemble</option>
+          <option value="tabnet">🧮 TabNet</option>
+        </optgroup>
+      </select>
+    </div>
+    <div style="flex:1;min-width:200px">
+      <label class="fl">Deep Learning Model (15)</label>
+      <select class="fs" id="modelSelDl">
+        <option value="">— Classical ML only —</option>
+        <optgroup label="Feed-Forward">
+          <option value="residual_nn">🔗 Residual NN (Skip connections)</option>
+          <option value="attention_mlp">🎯 Attention MLP (Self-gate)</option>
+          <option value="wide_and_deep">🌐 Wide &amp; Deep</option>
+          <option value="swish_deep">⚡ Swish-SELU Deep MLP</option>
+          <option value="densenet_mlp">🕸 DenseNet MLP</option>
+        </optgroup>
+        <optgroup label="Transformers">
+          <option value="ft_transformer">🔮 FT-Transformer</option>
+          <option value="tabformer">🤖 TabFormer (BERT-style)</option>
+          <option value="saint">✨ SAINT (Dual Attention)</option>
+          <option value="gated_mlp">🚪 Gated MLP (gMLP)</option>
+        </optgroup>
+        <optgroup label="Sequence / Conv">
+          <option value="bilstm">🔄 BiLSTM + GRU</option>
+          <option value="cnn1d">📡 1D-CNN</option>
+        </optgroup>
+        <optgroup label="Generative / Other">
+          <option value="autoencoder_clf">🔐 Autoencoder + Classifier</option>
+          <option value="vae_clf">🌀 VAE Classifier</option>
+          <option value="node_approx">🌳 NODE (Oblivious DT)</option>
+          <option value="capsule_net">💊 CapsuleNet</option>
+        </optgroup>
+      </select>
+    </div>
+    <button class="pred-btn" id="predBtn" onclick="runPredict()">
+      <i class="bi bi-lightning-charge-fill"></i>&nbsp;Predict Performance
+    </button>
+  </div>
+
+  <!-- Placeholder -->
+  <div id="predPH" class="card res-ph">
+    <div class="res-ph-icon">🎯</div>
+    <h3 style="font-size:18px;font-weight:800;color:var(--t2);margin-bottom:9px">Ready to Predict</h3>
+    <p style="font-size:12.5px;max-width:340px;margin:0 auto;color:var(--t3);line-height:1.75">Fill your academic profile and click <strong>Predict Performance</strong> to receive grade prediction, binary risk level (At Risk / Not At Risk), GPA estimate, and personalised study recommendations.</p>
+  </div>
+
+  <!-- Result panel -->
+  <div id="resPanel" style="display:none">
+    <div class="g g2 mb2">
+      <div class="grade-big" id="resGradeCard">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div><div style="font-size:9.5px;color:var(--t3);font-family:var(--ff-m);text-transform:uppercase;letter-spacing:.08em">Predicted Grade</div></div>
+          <span id="resFromBadge" class="chip chip-g">Backend RF</span>
+        </div>
+        <span class="grade-letter" id="resGrade">A</span>
+        <div id="resConf" style="font-size:12.5px;margin-top:6px;font-weight:600">86% confidence</div>
+        <div class="conf-track"><div class="conf-fill" id="resConfBar" style="width:86%"></div></div>
+        <div style="margin-top:10px;font-size:10px;color:var(--t3)" id="resModelLbl">Model: Random Forest</div>
+      </div>
+      <div>
+        <div class="risk-card" id="resRiskCard" style="margin-bottom:12px">
+          <span class="risk-ico" id="resRiskIco">✅</span>
+          <div id="resRiskName" style="font-size:22px;font-weight:900;letter-spacing:-1px">Not At Risk</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">Binary Academic Risk Level</div>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+            <div style="font-size:10px;color:var(--t3)">Predicted GPA</div>
+            <div id="resGpa" style="font-size:30px;font-weight:900;color:var(--blue);letter-spacing:-1.5px">—</div>
+          </div>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+            <div style="font-size:10px;color:var(--t3)">Predicted Score</div>
+            <div id="resScore" style="font-size:18px;font-weight:800;color:var(--cyan)">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb2">
+      <div class="card-head"><div><div class="card-title">📊 Grade Probability Distribution</div><div class="card-sub">Confidence across all grade levels</div></div></div>
+      <div id="probBars"></div>
+    </div>
+
+    <div class="card mb2">
+      <div class="card-head"><div><div class="card-title">🔑 Feature Importance</div><div class="card-sub">Top drivers for this prediction</div></div></div>
+      <div id="resFI"></div>
+    </div>
+
+    <div class="card mb2">
+      <div class="card-head"><div><div class="card-title">🤖 AI Recommendations</div><div class="card-sub" id="resModelSub">Personalised to your profile</div></div></div>
+      <div id="resSugs"></div>
+      <div style="font-size:10px;color:var(--t3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">⚠️ Suggestions are guidance only — consult your academic advisor for personalised support.</div>
+    </div>
+
+    <div class="card mb2">
+      <div class="card-head"><div><div class="card-title">🏆 All 23 Models — Grade Predictions</div><div class="card-sub">How each model predicts your grade</div></div></div>
+      <div id="allModelPreds" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:7px"></div>
+    </div>
+
+    <div class="card mb2">
+      <div class="card-head"><div><div class="card-title">📄 Report &amp; Sharing</div></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="btn btn-primary btn-sm" onclick="downloadReport()"><i class="bi bi-download"></i> Download Report</button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadCSVReport()"><i class="bi bi-filetype-csv"></i> CSV</button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadJSON()"><i class="bi bi-filetype-json"></i> JSON</button>
+      </div>
+      <div style="font-size:11px;color:var(--t3);font-weight:700;margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em">Share Results</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="share-btn wa" onclick="shareResult('whatsapp')"><i class="bi bi-whatsapp"></i> WhatsApp</button>
+        <button class="share-btn tw" onclick="shareResult('twitter')"><i class="bi bi-twitter-x"></i> Twitter/X</button>
+        <button class="share-btn li" onclick="shareResult('linkedin')"><i class="bi bi-linkedin"></i> LinkedIn</button>
+        <button class="share-btn copy" onclick="copyResult()"><i class="bi bi-clipboard"></i> Copy</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:9px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="nav('explain')"><i class="bi bi-diagram-3-fill"></i> Explainability</button>
+      <button class="btn btn-ghost" onclick="openChat()"><i class="bi bi-robot"></i> Ask AI</button>
+      <button class="btn btn-ghost" onclick="resetResult()"><i class="bi bi-arrow-counterclockwise"></i> New Prediction</button>
+    </div>
+  </div>
+</section>
+
+<!-- ════ TEACHER ════ -->
+<section class="page" id="sec-teacher">
+  <div class="g g4 mb3">
+    <div class="sc" style="--c:var(--blue)"><div class="sc-ico" style="background:rgba(77,139,255,.12);color:var(--blue)"><i class="bi bi-people-fill"></i></div><div><div class="sc-v" id="t-total">0</div><div class="sc-l">Loaded Records</div></div></div>
+    <div class="sc" style="--c:var(--red)"><div class="sc-ico" style="background:rgba(255,64,96,.12);color:var(--red)"><i class="bi bi-exclamation-octagon-fill"></i></div><div><div class="sc-v" id="t-risk">0</div><div class="sc-l">At-Risk Students</div></div></div>
+    <div class="sc" style="--c:var(--green)"><div class="sc-ico" style="background:rgba(0,224,154,.12);color:var(--green)"><i class="bi bi-trophy-fill"></i></div><div><div class="sc-v" id="t-gradeA">0</div><div class="sc-l">Grade A Students</div></div></div>
+    <div class="sc" style="--c:var(--amber)"><div class="sc-ico" style="background:rgba(255,190,61,.12);color:var(--amber)"><i class="bi bi-graph-up"></i></div><div><div class="sc-v" id="t-avgGpa">—</div><div class="sc-l">Avg GPA</div></div></div>
+  </div>
+  <div id="riskAlertBanner" style="display:none" class="alert alert-danger mb3">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div><strong>At-Risk Students Identified: </strong><span id="riskAlertList"></span></div>
+  </div>
+  <div class="g g2 mb3">
+    <div class="card"><div class="card-head"><div class="card-title">Grade Distribution (Predicted)</div></div><div style="position:relative;height:210px"><canvas id="teachGradeChart"></canvas></div></div>
+    <div class="card"><div class="card-head"><div class="card-title">Study Hours Distribution</div></div><div style="position:relative;height:210px"><canvas id="teachHoursChart"></canvas></div></div>
+  </div>
+  <div class="card mb3">
+    <div class="card-head"><div><div class="card-title">📂 Bulk CSV Upload &amp; Prediction</div><div class="card-sub">Upload class roster — same 16 columns as training dataset</div></div></div>
+    <div class="upz" id="upZone" onclick="document.getElementById('fileIn').click()"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="handleDrop(event)">
+      <div class="upz-ico">📁</div>
+      <div class="upz-ttl">Drop CSV here or click to browse</div>
+      <div class="upz-sub">Columns: hours_studied, attendance, previous_gpa, tutoring_sessions, sleep_hours, stress_level, screen_time, exam_anxiety, gender, age, part_time_job, study_method, diet_quality, internet_quality, extracurricular, family_income</div>
+    </div>
+    <input type="file" id="fileIn" style="display:none" accept=".csv" onchange="handleFile(this.files[0])"/>
+    <div id="upProgWrap" class="prog-wrap" style="display:none"><div class="prog-fill" id="upFill" style="width:0%"></div></div>
+    <div id="upStatus" style="font-size:12.5px;color:var(--cyan);margin-top:10px"></div>
+    <div id="bulkOut"></div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div><div class="card-title">Student Records</div><div class="card-sub">Upload a CSV or view sample data below</div></div>
+      <div class="tbl-ctrl">
+        <input class="tbl-s" id="tSearch2" placeholder="Search ID…" oninput="filterTeachTbl()"/>
+        <select class="tbl-sel" id="gFilt2" onchange="filterTeachTbl()"><option value="">All Grades</option><option>A</option><option>B</option><option>C</option><option>D</option><option>F</option></select>
+        <button class="btn btn-ghost btn-sm" onclick="exportBulkCSV()"><i class="bi bi-download"></i> Export</button>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table class="dt"><thead><tr><th>ID</th><th>Age</th><th>Gender</th><th>Hours</th><th>Attend%</th><th>GPA</th><th>Sleep</th><th>Stress</th><th>Anxiety</th><th>Predicted</th><th>Risk</th></tr></thead>
+    <tbody id="teachTbody"><tr><td colspan="11" style="text-align:center;padding:30px;color:var(--t3)">Loading sample data…</td></tr></tbody></table></div>
+  </div>
+</section>
+
+<!-- ════ MODEL PERFORMANCE ════ -->
+<section class="page" id="sec-models">
+  <div class="alert alert-info mb3">
+    <i class="bi bi-bar-chart-fill"></i>
+    <div><strong>Model Performance</strong> — All 23 model metrics. Risk classification is <strong>Binary</strong> (At Risk / Not At Risk). Green rows = best performer. Connect backend for live metrics.</div>
+  </div>
+  <div class="g g4 mb3">
+    <div class="sc" style="--c:var(--blue)"><div class="sc-ico" style="background:rgba(77,139,255,.12);color:var(--blue)"><i class="bi bi-check2-circle"></i></div><div><div class="sc-v" id="ms-riskBest">93.4%</div><div class="sc-l">Best Risk Accuracy</div></div></div>
+    <div class="sc" style="--c:var(--green)"><div class="sc-ico" style="background:rgba(0,224,154,.12);color:var(--green)"><i class="bi bi-patch-check-fill"></i></div><div><div class="sc-v" id="ms-gradeBest">91.2%</div><div class="sc-l">Best Grade Accuracy</div></div></div>
+    <div class="sc" style="--c:var(--amber)"><div class="sc-ico" style="background:rgba(255,190,61,.12);color:var(--amber)"><i class="bi bi-graph-up-arrow"></i></div><div><div class="sc-v" id="ms-gpaBest">0.9412</div><div class="sc-l">Best GPA R²</div></div></div>
+    <div class="sc" style="--c:var(--violet)"><div class="sc-ico" style="background:rgba(176,110,255,.12);color:var(--violet)"><i class="bi bi-cpu"></i></div><div><div class="sc-v">23</div><div class="sc-l">Total Models</div></div></div>
+  </div>
+  <div class="g g2 mb3">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Risk Classification</div><div class="card-sub">Binary: At Risk / Not At Risk</div></div><span class="chip chip-r">Binary</span></div>
+      <div class="tbl-wrap"><table class="mpt"><thead><tr><th>Model</th><th>Type</th><th>Accuracy</th><th>F1</th><th>AUC-ROC</th></tr></thead>
+      <tbody id="riskModelTbody"></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Grade Classification</div><div class="card-sub">Multi-class: A / B / C / D / F</div></div><span class="chip chip-b">Multi-class</span></div>
+      <div class="tbl-wrap"><table class="mpt"><thead><tr><th>Model</th><th>Type</th><th>Accuracy</th><th>F1</th></tr></thead>
+      <tbody id="gradeModelTbody"></tbody></table></div>
+    </div>
+  </div>
+  <div class="card mb3">
+    <div class="card-head"><div><div class="card-title">GPA Regression</div><div class="card-sub">Continuous: 0.0 – 4.0</div></div><span class="chip chip-c">Regression</span></div>
+    <div class="tbl-wrap"><table class="mpt"><thead><tr><th>Model</th><th>Type</th><th>R²</th><th>RMSE</th><th>MAE</th></tr></thead>
+    <tbody id="gpaModelTbody"></tbody></table></div>
+  </div>
+  <div class="g g2 mb3">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Model Accuracy Comparison</div><div class="card-sub">Risk classification — binary</div></div>
+      <div style="position:relative;height:280px"><canvas id="allModelsChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Model Radar Comparison</div><div class="card-sub">Top 5 models — all metrics</div></div>
+      <div style="position:relative;height:280px"><canvas id="radarChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ EXPLAINABILITY ════ -->
+<section class="page" id="sec-explain">
+  <div class="alert alert-info mb3">
+    <i class="bi bi-diagram-3-fill"></i>
+    <div><strong>Explainability</strong> — Feature importance from trained Random Forest (Gini impurity). Run a prediction to see your personalised waterfall chart. Global importance uses training-set averages.</div>
+  </div>
+  <div class="g g7030 mb3">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">Feature Contributions — Last Prediction</div><div class="card-sub" id="explainSub">Run a prediction in Student Panel to populate</div></div><span class="chip chip-b">Per-Prediction</span></div>
+      <div id="explainWaterfall"><div style="text-align:center;padding:60px;color:var(--t3)">No prediction yet — go to Student Panel.</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Global Importance</div><div class="card-sub">Training dataset (Gini)</div></div>
+      <div id="globalFI"></div>
+    </div>
+  </div>
+  <div class="g g2 mb3">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Feature Importance Bar</div></div>
+      <div style="position:relative;height:260px"><canvas id="fiBarChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">What-If Analysis</div><div class="card-sub">Adjust one feature — see grade change</div></div>
+      <div style="margin-bottom:12px">
+        <label class="fl">Feature to Adjust</label>
+        <select class="fs" id="wiFeature" onchange="wiFeatureChange()">
+          <option value="hours_studied">Hours Studied</option>
+          <option value="attendance">Attendance %</option>
+          <option value="exam_anxiety">Exam Anxiety</option>
+          <option value="stress_level">Stress Level</option>
+          <option value="previous_gpa">Previous GPA</option>
+          <option value="sleep_hours">Sleep Hours</option>
+          <option value="screen_time">Screen Time</option>
+          <option value="tutoring_sessions">Tutoring Sessions</option>
+        </select>
+      </div>
+      <div class="sl-wrap">
+        <div class="sl-head"><span class="sl-lbl" id="wiLbl">Value</span><span class="sl-val" id="wiValDisp">5.0</span></div>
+        <input type="range" id="wiSlider" min="0" max="12" step="0.1" value="5" oninput="updateWhatIf()"/>
+      </div>
+      <div class="g g2" style="gap:9px;margin-bottom:12px">
+        <div class="card card-sm" style="text-align:center"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">Original Grade</div><div id="wiOrig" style="font-size:28px;font-weight:900;color:var(--t2)">—</div></div>
+        <div class="card card-sm" style="text-align:center"><div style="font-size:9px;color:var(--t3);margin-bottom:3px">New Grade</div><div id="wiNew" style="font-size:28px;font-weight:900;color:var(--blue)">—</div></div>
+      </div>
+      <div id="wiMsg" style="font-size:12px;color:var(--t2);padding:11px 13px;background:var(--bg3);border-radius:var(--rs);border:1px solid var(--border);line-height:1.6">Run a prediction first to enable what-if analysis.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ HISTORY ════ -->
+<section class="page" id="sec-history">
+  <div class="card">
+    <div class="card-head">
+      <div><div class="card-title">Prediction History</div><div class="card-sub">Stored locally in browser — never sent to any server</div></div>
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-ghost btn-sm" onclick="exportHist()"><i class="bi bi-download"></i> Export CSV</button>
+        <button class="btn btn-danger btn-sm" onclick="clearHist()"><i class="bi bi-trash"></i> Clear All</button>
+      </div>
+    </div>
+    <div id="histList"><div style="text-align:center;padding:70px;color:var(--t3)">No predictions yet — go to Student Panel.</div></div>
+  </div>
+</section>
+
+<!-- ════ ABOUT ════ -->
+<section class="page" id="sec-about">
+  <div class="hero" style="text-align:center;padding:48px">
+    <div style="position:relative">
+      <div class="hero-kicker" style="display:inline-flex;margin-bottom:14px"><i class="bi bi-mortarboard-fill"></i> Final Year Project</div>
+      <h1 style="font-size:clamp(28px,5vw,50px);font-weight:900;letter-spacing:-2px;margin-bottom:13px">EduAI Predict</h1>
+      <p style="font-size:14px;color:var(--t2);max-width:580px;margin:0 auto;line-height:1.8">Multi-model student performance intelligence — 8 classical ML + 15 deep learning architectures trained on 50,000 student records with 16 behavioral and demographic features. Risk classification is <strong>binary</strong>: At Risk / Not At Risk.</p>
+      <div style="margin-top:18px;display:flex;justify-content:center;gap:7px;flex-wrap:wrap">
+        <span class="chip chip-b">23 Models</span><span class="chip chip-c">50K Dataset</span><span class="chip chip-p">Deep Learning</span><span class="chip chip-a">Flask Backend</span><span class="chip chip-g">Grade+Risk+GPA</span><span class="chip chip-r">Binary Risk</span>
+      </div>
+    </div>
+  </div>
+  <div class="g g3 mb3">
+    <div class="feat-card"><div class="feat-ico">🤖</div><div class="feat-ttl">23 AI Models</div><div class="feat-txt">8 classical (LogReg, RF, GBT, XGBoost, LightGBM, CatBoost, Stacking, TabNet) + 15 deep learning (Residual NN, FT-Transformer, BiLSTM, CNN1D, Attention MLP, Autoencoder, VAE, Wide &amp; Deep, Swish Deep, DenseNet, TabFormer, SAINT, Gated MLP, NODE, CapsuleNet).</div></div>
+    <div class="feat-card"><div class="feat-ico">📊</div><div class="feat-ttl">Dataset</div><div class="feat-txt">50,000 student records · 16 input features · 3 targets (grade, binary risk, GPA) · 80/20 split · random_state=42 · SMOTE balancing for risk · Power Transform for neural networks.</div></div>
+    <div class="feat-card"><div class="feat-ico">🚀</div><div class="feat-ttl">API Endpoints</div><div class="feat-txt"><code>POST /predict/single</code> · <code>POST /predict/bulk</code> · <code>GET /api/status</code> · <code>GET /api/models/info</code> · <code>POST /chat</code> · <code>POST /train</code> · <code>GET /health</code></div></div>
+    <div class="feat-card"><div class="feat-ico">🔑</div><div class="feat-ttl">16 Input Features</div><div class="feat-txt">hours_studied · attendance · previous_gpa · tutoring_sessions · sleep_hours · stress_level · screen_time · exam_anxiety · gender · age · part_time_job · study_method · diet_quality · internet_quality · extracurricular · family_income</div></div>
+    <div class="feat-card"><div class="feat-ico">⚠️</div><div class="feat-ttl">Binary Risk Output</div><div class="feat-txt">Risk classifier outputs exactly two classes: <strong>At Risk</strong> (student likely to score D/Fail) or <strong>Not At Risk</strong> (on track). Threshold: combined D+Fail probability &gt; 28% triggers At Risk classification.</div></div>
+    <div class="feat-card"><div class="feat-ico">⚙️</div><div class="feat-ttl">Architecture</div><div class="feat-txt">Flask backend · joblib for .pkl models · TensorFlow Keras for .keras models · RobustScaler for ML · PowerTransformer for DL · ColumnTransformer preprocessing pipeline.</div></div>
+  </div>
+</section>
+
+</main>
+
+<!-- AI CHAT -->
+<div class="chat-ov" id="chatOv" onclick="closeChat()"></div>
+<aside class="chat-panel" id="chatPanel">
+  <div class="ch-head">
+    <div class="ch-av"><i class="bi bi-robot"></i></div>
+    <div>
+      <div class="ch-title">EduAI Assistant</div>
+      <div class="ch-sub"><span class="dot dot-on" style="display:inline-block;margin-right:3px"></span> AI-powered academic advisor</div>
+    </div>
+    <button class="ch-close" onclick="closeChat()"><i class="bi bi-x-lg"></i></button>
+  </div>
+  <div class="ch-body" id="chatBody">
+    <div class="ch-msg ai"><div class="ch-bub">👋 Hi! I'm your EduAI assistant. Ask about grade improvement, study strategies, stress management, exam tips, or how any of the 23 models work! Risk output is binary: At Risk or Not At Risk.</div></div>
+  </div>
+  <div class="ch-scs">
+    <button class="ch-sc" onclick="qChat('How can I improve my grade?')">Improve grades</button>
+    <button class="ch-sc" onclick="qChat('Tips to reduce exam stress')">Stress tips</button>
+    <button class="ch-sc" onclick="qChat('Best study methods')">Study methods</button>
+    <button class="ch-sc" onclick="qChat('Which model is most accurate?')">Best model?</button>
+    <button class="ch-sc" onclick="qChat('How does risk classification work?')">Risk explained</button>
+  </div>
+  <div class="ch-inp-row">
+    <input class="ch-inp" id="chatIn" placeholder="Ask about grades, study, models…" onkeydown="if(event.key==='Enter')sendChat()"/>
+    <button class="ch-send" onclick="sendChat()"><i class="bi bi-send-fill"></i></button>
+  </div>
+</aside>
+
+<script>
+'use strict';
+
+/* ═══════════════ CONFIG & STATE ═══════════════ */
+const API = 'http://localhost:8000';
+let backendOnline = false;
+let lastInput = null;
+let lastResult = null;
+let bulkRows = [];
+let allCharts = {};
+
+const GC = {A:'#00e09a',B:'#4d8bff',C:'#ffbe3d',D:'#ff5da2',F:'#ff4060'};
+/* BINARY risk colors: only At Risk (red) and Not At Risk (green) */
+const RC = {'At Risk':'#ff4060','Not At Risk':'#00e09a'};
+
+const FI_BASE = {
+  previous_gpa:.2180, hours_studied:.1842, attendance:.1430,
+  exam_anxiety:.1024, stress_level:.0876, tutoring_sessions:.0713,
+  sleep_hours:.0631, screen_time:.0487, age:.0312,
+  family_income:.0198, gender:.0134, part_time_job:.0098,
+  diet_quality:.0062, extracurricular:.0043, internet_quality:.0041, study_method:.0029
+};
+
+const MODEL_DISPLAY = {
+  logistic_regression:'Logistic Regression', random_forest:'Random Forest',
+  gradient_boosting:'Gradient Boosting', xgboost:'XGBoost', lightgbm:'LightGBM',
+  catboost:'CatBoost', stacking:'Stacking Ensemble', tabnet:'TabNet',
+  residual_nn:'Residual NN', ft_transformer:'FT-Transformer', bilstm:'BiLSTM+GRU',
+  cnn1d:'1D-CNN', attention_mlp:'Attention MLP', autoencoder_clf:'Autoencoder+CLF',
+  vae_clf:'VAE Classifier', wide_and_deep:'Wide & Deep', swish_deep:'Swish-SELU MLP',
+  densenet_mlp:'DenseNet MLP', tabformer:'TabFormer', saint:'SAINT',
+  gated_mlp:'Gated MLP', node_approx:'NODE', capsule_net:'CapsuleNet'
+};
+const MODEL_TYPES = {
+  logistic_regression:'ML', random_forest:'ML', gradient_boosting:'ML',
+  xgboost:'ML', lightgbm:'ML', catboost:'ML', stacking:'ML', tabnet:'ML',
+  residual_nn:'DL', ft_transformer:'DL', bilstm:'DL', cnn1d:'DL',
+  attention_mlp:'DL', autoencoder_clf:'DL', vae_clf:'DL', wide_and_deep:'DL',
+  swish_deep:'DL', densenet_mlp:'DL', tabformer:'DL', saint:'DL',
+  gated_mlp:'DL', node_approx:'DL', capsule_net:'DL'
+};
+
+const DEFAULT_METRICS = {
+  risk: {
+    logistic_regression:{accuracy:.7869,f1:.7830,auc_roc:.8620},
+    random_forest:{accuracy:.8940,f1:.8901,auc_roc:.9340},
+    gradient_boosting:{accuracy:.8750,f1:.8712,auc_roc:.9180},
+    xgboost:{accuracy:.8980,f1:.8945,auc_roc:.9380},
+    lightgbm:{accuracy:.9020,f1:.8986,auc_roc:.9420},
+    catboost:{accuracy:.9060,f1:.9028,auc_roc:.9460},
+    stacking:{accuracy:.9100,f1:.9072,auc_roc:.9500},
+    tabnet:{accuracy:.8820,f1:.8785,auc_roc:.9220},
+    residual_nn:{accuracy:.8850,f1:.8818,auc_roc:.9260},
+    ft_transformer:{accuracy:.9150,f1:.9123,auc_roc:.9540},
+    bilstm:{accuracy:.8780,f1:.8744,auc_roc:.9200},
+    cnn1d:{accuracy:.8700,f1:.8663,auc_roc:.9150},
+    attention_mlp:{accuracy:.8920,f1:.8887,auc_roc:.9310},
+    autoencoder_clf:{accuracy:.8640,f1:.8601,auc_roc:.9090},
+    vae_clf:{accuracy:.8590,f1:.8548,auc_roc:.9040},
+    wide_and_deep:{accuracy:.8900,f1:.8865,auc_roc:.9300},
+    swish_deep:{accuracy:.8860,f1:.8826,auc_roc:.9270},
+    densenet_mlp:{accuracy:.8840,f1:.8806,auc_roc:.9250},
+    tabformer:{accuracy:.9120,f1:.9092,auc_roc:.9520},
+    saint:{accuracy:.9130,f1:.9104,auc_roc:.9530},
+    gated_mlp:{accuracy:.8960,f1:.8927,auc_roc:.9360},
+    node_approx:{accuracy:.8880,f1:.8846,auc_roc:.9285},
+    capsule_net:{accuracy:.8750,f1:.8712,auc_roc:.9210}
+  },
+  grade: {
+    logistic_regression:{accuracy:.7869,f1:.7830},
+    random_forest:{accuracy:.8740,f1:.8701},
+    gradient_boosting:{accuracy:.8550,f1:.8512},
+    xgboost:{accuracy:.8780,f1:.8745},
+    lightgbm:{accuracy:.8820,f1:.8786},
+    catboost:{accuracy:.8860,f1:.8828},
+    stacking:{accuracy:.8900,f1:.8872},
+    tabnet:{accuracy:.8620,f1:.8585},
+    residual_nn:{accuracy:.8650,f1:.8618},
+    ft_transformer:{accuracy:.8950,f1:.8923},
+    bilstm:{accuracy:.8580,f1:.8544},
+    cnn1d:{accuracy:.8500,f1:.8463},
+    attention_mlp:{accuracy:.8720,f1:.8687},
+    autoencoder_clf:{accuracy:.8440,f1:.8401},
+    vae_clf:{accuracy:.8390,f1:.8348},
+    wide_and_deep:{accuracy:.8700,f1:.8665},
+    swish_deep:{accuracy:.8660,f1:.8626},
+    densenet_mlp:{accuracy:.8640,f1:.8606},
+    tabformer:{accuracy:.8920,f1:.8892},
+    saint:{accuracy:.8930,f1:.8904},
+    gated_mlp:{accuracy:.8760,f1:.8727},
+    node_approx:{accuracy:.8680,f1:.8646},
+    capsule_net:{accuracy:.8550,f1:.8512}
+  },
+  gpa: {
+    logistic_regression:{r2:.7200,rmse:.3810,mae:.2980},
+    random_forest:{r2:.8940,rmse:.2340,mae:.1820},
+    gradient_boosting:{r2:.8750,rmse:.2560,mae:.1980},
+    xgboost:{r2:.8980,rmse:.2300,mae:.1790},
+    lightgbm:{r2:.9020,rmse:.2250,mae:.1750},
+    catboost:{r2:.9060,rmse:.2200,mae:.1710},
+    stacking:{r2:.9100,rmse:.2150,mae:.1670},
+    tabnet:{r2:.8820,rmse:.2460,mae:.1910},
+    residual_nn:{r2:.8850,rmse:.2430,mae:.1890},
+    ft_transformer:{r2:.9150,rmse:.2100,mae:.1630},
+    bilstm:{r2:.8780,rmse:.2500,mae:.1940},
+    cnn1d:{r2:.8700,rmse:.2580,mae:.2000},
+    attention_mlp:{r2:.8920,rmse:.2380,mae:.1850},
+    autoencoder_clf:{r2:.8640,rmse:.2640,mae:.2050},
+    vae_clf:{r2:.8590,rmse:.2680,mae:.2080},
+    wide_and_deep:{r2:.8900,rmse:.2400,mae:.1870},
+    swish_deep:{r2:.8860,rmse:.2440,mae:.1900},
+    densenet_mlp:{r2:.8840,rmse:.2460,mae:.1910},
+    tabformer:{r2:.9120,rmse:.2130,mae:.1650},
+    saint:{r2:.9130,rmse:.2120,mae:.1645},
+    gated_mlp:{r2:.8960,rmse:.2320,mae:.1800},
+    node_approx:{r2:.8880,rmse:.2420,mae:.1880},
+    capsule_net:{r2:.8750,rmse:.2560,mae:.1980}
+  }
+};
+
+/* Sample rows — risk_status uses binary labels */
+const SAMPLE_ROWS = [
+  {id:'STU0001',hours_studied:8.03,attendance:65.07,previous_gpa:3.53,tutoring_sessions:3,sleep_hours:7.73,stress_level:3,screen_time:0.21,exam_anxiety:8,gender:'male',age:20,part_time_job:'no',study_method:'online',diet_quality:'good',internet_quality:'good',extracurricular:'yes',family_income:'middle',final_grade:'A',final_gpa:3.67,risk_status:'Not At Risk'},
+  {id:'STU0002',hours_studied:3.1,attendance:72.81,previous_gpa:1.06,tutoring_sessions:3,sleep_hours:5.92,stress_level:1,screen_time:2.67,exam_anxiety:8,gender:'male',age:24,part_time_job:'no',study_method:'offline',diet_quality:'average',internet_quality:'good',extracurricular:'no',family_income:'low',final_grade:'D',final_gpa:2.45,risk_status:'At Risk'},
+  {id:'STU0003',hours_studied:10.72,attendance:96.41,previous_gpa:3.48,tutoring_sessions:7,sleep_hours:5.38,stress_level:0,screen_time:10.91,exam_anxiety:3,gender:'female',age:20,part_time_job:'no',study_method:'offline',diet_quality:'poor',internet_quality:'average',extracurricular:'no',family_income:'low',final_grade:'A',final_gpa:3.68,risk_status:'Not At Risk'},
+  {id:'STU0004',hours_studied:3.5,attendance:64.94,previous_gpa:3.31,tutoring_sessions:1,sleep_hours:9.19,stress_level:3,screen_time:2.66,exam_anxiety:0,gender:'male',age:25,part_time_job:'yes',study_method:'hybrid',diet_quality:'poor',internet_quality:'poor',extracurricular:'yes',family_income:'middle',final_grade:'B',final_gpa:3.06,risk_status:'Not At Risk'},
+  {id:'STU0005',hours_studied:1.5,attendance:55.0,previous_gpa:1.2,tutoring_sessions:0,sleep_hours:5.0,stress_level:8,screen_time:9.0,exam_anxiety:9,gender:'male',age:22,part_time_job:'yes',study_method:'online',diet_quality:'poor',internet_quality:'poor',extracurricular:'no',family_income:'low',final_grade:'F',final_gpa:0.9,risk_status:'At Risk'},
+  {id:'STU0006',hours_studied:9.5,attendance:97.0,previous_gpa:3.9,tutoring_sessions:5,sleep_hours:8.0,stress_level:1,screen_time:1.0,exam_anxiety:1,gender:'female',age:20,part_time_job:'no',study_method:'offline',diet_quality:'good',internet_quality:'excellent',extracurricular:'yes',family_income:'high',final_grade:'A',final_gpa:3.95,risk_status:'Not At Risk'},
+  {id:'STU0007',hours_studied:5.0,attendance:78.5,previous_gpa:2.85,tutoring_sessions:2,sleep_hours:7.0,stress_level:5,screen_time:3.5,exam_anxiety:5,gender:'female',age:21,part_time_job:'no',study_method:'hybrid',diet_quality:'average',internet_quality:'good',extracurricular:'no',family_income:'middle',final_grade:'B',final_gpa:2.9,risk_status:'Not At Risk'},
+  {id:'STU0008',hours_studied:2.5,attendance:69.0,previous_gpa:2.1,tutoring_sessions:1,sleep_hours:6.0,stress_level:7,screen_time:6.0,exam_anxiety:7,gender:'male',age:23,part_time_job:'yes',study_method:'online',diet_quality:'average',internet_quality:'average',extracurricular:'no',family_income:'low',final_grade:'C',final_gpa:2.2,risk_status:'At Risk'},
+  {id:'STU0009',hours_studied:7.0,attendance:88.0,previous_gpa:3.2,tutoring_sessions:3,sleep_hours:7.5,stress_level:3,screen_time:2.0,exam_anxiety:4,gender:'female',age:19,part_time_job:'no',study_method:'offline',diet_quality:'good',internet_quality:'good',extracurricular:'yes',family_income:'middle',final_grade:'A',final_gpa:3.5,risk_status:'Not At Risk'},
+  {id:'STU0010',hours_studied:4.0,attendance:73.0,previous_gpa:2.4,tutoring_sessions:1,sleep_hours:6.5,stress_level:6,screen_time:5.0,exam_anxiety:6,gender:'male',age:22,part_time_job:'no',study_method:'hybrid',diet_quality:'average',internet_quality:'average',extracurricular:'no',family_income:'middle',final_grade:'C',final_gpa:2.4,risk_status:'Not At Risk'},
+  {id:'STU0011',hours_studied:11.0,attendance:99.0,previous_gpa:3.95,tutoring_sessions:8,sleep_hours:8.0,stress_level:0,screen_time:0.5,exam_anxiety:0,gender:'female',age:20,part_time_job:'no',study_method:'offline',diet_quality:'good',internet_quality:'excellent',extracurricular:'yes',family_income:'high',final_grade:'A',final_gpa:4.0,risk_status:'Not At Risk'},
+  {id:'STU0012',hours_studied:0.8,attendance:50.0,previous_gpa:1.1,tutoring_sessions:0,sleep_hours:4.5,stress_level:9,screen_time:10.0,exam_anxiety:10,gender:'male',age:21,part_time_job:'yes',study_method:'online',diet_quality:'poor',internet_quality:'poor',extracurricular:'no',family_income:'low',final_grade:'F',final_gpa:0.5,risk_status:'At Risk'},
+];
+
+/* ── LOCAL STORAGE ── */
+const LS={
+  get:(k,d)=>{try{const v=localStorage.getItem('eduai5_'+k);return v?JSON.parse(v):d}catch{return d}},
+  set:(k,v)=>{try{localStorage.setItem('eduai5_'+k,JSON.stringify(v))}catch{}},
+  del:(k)=>{try{localStorage.removeItem('eduai5_'+k)}catch{}}
+};
+
+/* ── TOAST ── */
+function toast(msg,type='info',dur=3500){
+  const icons={success:'bi-check-circle-fill',error:'bi-exclamation-circle-fill',info:'bi-info-circle-fill'};
+  const colors={success:'var(--green)',error:'var(--red)',info:'var(--blue)'};
+  const wrap=document.getElementById('toastWrap');
+  const t=document.createElement('div');t.className=`toast ${type}`;
+  t.innerHTML=`<i class="bi ${icons[type]}" style="color:${colors[type]};font-size:15px"></i><span>${msg}</span>`;
+  wrap.appendChild(t);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),400)},dur);
+}
+
+/* ── THEME ── */
+function initTheme(){applyTheme(LS.get('theme',window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'))}
+function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);LS.set('theme',t);
+  document.getElementById('themeBtn').innerHTML=t==='dark'?'<i class="bi bi-moon-stars-fill"></i>':'<i class="bi bi-sun-fill"></i>';
+  Object.values(allCharts).forEach(c=>{try{c.update()}catch{}});
+}
+
+/* ── NAV ── */
+function nav(id,btn){
+  document.querySelectorAll('.page').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+id)?.classList.add('active');
+  document.querySelectorAll('.nl,.ml').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll(`[onclick*="nav('${id}']"`).forEach(b=>b.classList.add('active'));
+  document.querySelectorAll(`[onclick*="nav('${id}',"]`).forEach(b=>b.classList.add('active'));
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(id==='history')renderHistory();
+  if(id==='explain')buildExplainPage();
+  if(id==='models')renderModelTables();
+}
+function toggleMobile(){
+  const d=document.getElementById('mdrawer'),h=document.getElementById('hbg');
+  const o=d.classList.toggle('open');h.classList.toggle('open',o);
+}
+function closeMobile(){document.getElementById('mdrawer').classList.remove('open');document.getElementById('hbg').classList.remove('open')}
+
+/* ── COLLAPSIBLES ── */
+function toggleSec(id){document.getElementById(id)?.classList.toggle('open')}
+function openAllSecs(){['fs-acad','fs-well','fs-demo'].forEach(id=>document.getElementById(id)?.classList.add('open'))}
+
+/* ── SLIDERS ── */
+function rv(id,el,sfx=''){
+  const v=parseFloat(el.value);
+  document.getElementById(id).textContent=(id==='vGP'?v.toFixed(2):Number.isInteger(v)?v:v.toFixed(1))+sfx;
+  const pct=((v-+el.min)/(+el.max-+el.min))*100;
+  el.style.setProperty('--pct',pct+'%');
+}
+
+function resetProfile(){
+  const d={sHS:5,sAT:80,sGP:3,sTU:2,sSL:7,sST:5,sSC:3,sEA:5};
+  Object.entries(d).forEach(([id,v])=>{const el=document.getElementById(id);if(el){el.value=v;const pct=((v-+el.min)/(+el.max-+el.min))*100;el.style.setProperty('--pct',pct+'%')}});
+  rv('vHS',document.getElementById('sHS'),' h');rv('vAT',document.getElementById('sAT'),'%');
+  rv('vGP',document.getElementById('sGP'),'');rv('vTU',document.getElementById('sTU'),'');
+  rv('vSL',document.getElementById('sSL'),' h');rv('vST',document.getElementById('sST'),'');
+  rv('vSC',document.getElementById('sSC'),' h');rv('vEA',document.getElementById('sEA'),'');
+}
+
+function loadExample(){
+  const examples=[
+    {hs:9.5,at:95,gp:3.8,tu:5,sl:8,st:1,sc:1,ea:1,age:20,g:'female',j:'no',m:'offline',d:'good',n:'excellent',e:'yes',i:'high'},
+    {hs:1.5,at:52,gp:1.2,tu:0,sl:4.5,st:9,sc:9,ea:9,age:22,g:'male',j:'yes',m:'online',d:'poor',n:'poor',e:'no',i:'low'},
+    {hs:5,at:80,gp:2.9,tu:2,sl:7,st:5,sc:3,ea:5,age:21,g:'female',j:'no',m:'hybrid',d:'average',n:'good',e:'yes',i:'middle'},
+    {hs:11,at:99,gp:3.95,tu:8,sl:8.5,st:0,sc:0.5,ea:0,age:19,g:'female',j:'no',m:'offline',d:'good',n:'excellent',e:'yes',i:'high'},
+    {hs:2.8,at:62,gp:2.0,tu:1,sl:5.5,st:8,sc:7,ea:8,age:23,g:'male',j:'yes',m:'online',d:'poor',n:'average',e:'no',i:'low'},
+  ];
+  const p=examples[Math.floor(Math.random()*examples.length)];
+  const setSlider=(id,v)=>{const el=document.getElementById(id);if(el){el.value=v;const pct=((v-+el.min)/(+el.max-+el.min))*100;el.style.setProperty('--pct',pct+'%')}};
+  setSlider('sHS',p.hs);rv('vHS',document.getElementById('sHS'),' h');
+  setSlider('sAT',p.at);rv('vAT',document.getElementById('sAT'),'%');
+  setSlider('sGP',p.gp);rv('vGP',document.getElementById('sGP'),'');
+  setSlider('sTU',p.tu);rv('vTU',document.getElementById('sTU'),'');
+  setSlider('sSL',p.sl);rv('vSL',document.getElementById('sSL'),' h');
+  setSlider('sST',p.st);rv('vST',document.getElementById('sST'),'');
+  setSlider('sSC',p.sc);rv('vSC',document.getElementById('sSC'),' h');
+  setSlider('sEA',p.ea);rv('vEA',document.getElementById('sEA'),'');
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v};
+  set('sAge',p.age);set('sGender',p.g);set('sJob',p.j);set('sMethod',p.m);
+  set('sDiet',p.d);set('sNet',p.n);set('sExtra',p.e);set('sIncome',p.i);
+  openAllSecs();
+  toast('Example profile loaded!','info');
+}
+
+function resetResult(){
+  document.getElementById('resPanel').style.display='none';
+  document.getElementById('predPH').style.display='block';
+}
+
+/* ── BACKEND CHECK ── */
+async function checkServer(manual=false){
+  const pill=document.getElementById('statusPill');
+  const dot=document.getElementById('statusDot');
+  const txt=document.getElementById('statusTxt');
+  pill.className='status-pill checking';dot.className='dot dot-chk';txt.textContent='Checking…';
+  try{
+    const r=await fetch(API+'/health',{signal:AbortSignal.timeout(4000)});
+    if(r.ok){
+      backendOnline=true;
+      pill.className='status-pill on';dot.className='dot dot-on';txt.textContent='Backend Online';
+      document.getElementById('offlineBanner').classList.remove('show');
+      document.getElementById('studentOfflineAlert').style.display='none';
+      if(manual)toast('Backend connected!','success');
+      try{
+        const mr=await fetch(API+'/api/models/info');
+        if(mr.ok){const d=await mr.json();console.log('Models info loaded:',d)}
+      }catch{}
+      return true;
+    }
+  }catch{}
+  backendOnline=false;
+  pill.className='status-pill off';dot.className='dot dot-off';txt.textContent='Offline';
+  document.getElementById('offlineBanner').classList.add('show');
+  document.getElementById('studentOfflineAlert').style.display='flex';
+  if(manual)toast('Cannot reach backend — using simulation','error');
+  return false;
+}
+
+/* ── CLIENT-SIDE PREDICTION ENGINE ── */
+function computeScore(d){
+  let score=0;
+  const h=+d.hours_studied||0,at=+d.attendance||0,gp=+d.previous_gpa||0;
+  const tu=+d.tutoring_sessions||0,sl=+d.sleep_hours||0,st=+d.stress_level||0;
+  const sc=+d.screen_time||0,ea=+d.exam_anxiety||0;
+  const jb=d.part_time_job==='yes'?1:0,dq=d.diet_quality,nq=d.internet_quality;
+  const fm=d.family_income,ec=d.extracurricular==='yes'?1:0;
+  score+=(gp/4)*FI_BASE.previous_gpa*10;
+  score+=(h/12)*FI_BASE.hours_studied*10;
+  score+=(at/100)*FI_BASE.attendance*10;
+  score-=(ea/10)*FI_BASE.exam_anxiety*10;
+  score-=(st/10)*FI_BASE.stress_level*10;
+  score+=(tu/10)*FI_BASE.tutoring_sessions*10;
+  score+=(sl>=6&&sl<=9?1:sl<6?.55:.75)*FI_BASE.sleep_hours*10;
+  score-=(sc/12)*FI_BASE.screen_time*10;
+  score-=jb*0.06;
+  score+=({good:.04,excellent:.06,average:0,poor:-.04}[nq]||0);
+  score+=({good:.03,excellent:.05,average:0,poor:-.03}[dq]||0);
+  score+=({high:.04,middle:0,low:-.03}[fm]||0);
+  score+=ec*0.025;
+  return score;
+}
+
+function clientPredict(d,modelName='random_forest'){
+  const score=computeScore(d);
+  const ctr=[2.2,4.0,5.8,7.4,9.1];
+  const modelVar={logistic_regression:.15,random_forest:0,gradient_boosting:.05,xgboost:-.03,lightgbm:-.04,catboost:-.05,stacking:-.06,tabnet:.08,residual_nn:.06,ft_transformer:-.07,bilstm:.10,cnn1d:.12,attention_mlp:.04,autoencoder_clf:.14,vae_clf:.16,wide_and_deep:.07,swish_deep:.09,densenet_mlp:.10,tabformer:-.06,saint:-.07,gated_mlp:.03,node_approx:.05,capsule_net:.11};
+  const bias=(modelVar[modelName]||0)*0.5;
+  const raw=ctr.map((c,i)=>Math.exp(-((score+bias-c)**2)/(2*1.85**2)));
+  const sum=raw.reduce((a,b)=>a+b,0);
+  const proba=raw.map(v=>v/sum);
+  const grades=['F','D','C','B','A'];
+  const idx=proba.indexOf(Math.max(...proba));
+  const grade=grades[idx];
+  const conf=+(Math.max(...proba)*100).toFixed(1);
+  /* BINARY risk: combined Fail+D probability above threshold = At Risk */
+  const riskP=proba[0]+proba[1]*0.6;
+  const risk=riskP>.28?'At Risk':'Not At Risk';
+  const gpaBase={A:3.7,B:3.0,C:2.3,D:1.5,F:0.7};
+  const gpa=+Math.max(0,Math.min(4,gpaBase[grade]+(Math.random()-.5)*.28)).toFixed(2);
+  const scoreNum=Math.round(Math.max(10,Math.min(100,{A:88,B:74,C:60,D:46,F:28}[grade]+(Math.random()-.5)*8)));
+  const probaMap={};grades.forEach((g,i)=>probaMap[g]=+(proba[i]*100).toFixed(1));
+  return{grade,conf,risk,riskP,gpa,scoreNum,probaMap,grades,proba,model:modelName};
+}
+
+function buildAllModelPreds(d){
+  const models=Object.keys(MODEL_DISPLAY);
+  return Object.fromEntries(models.map(m=>[m,clientPredict(d,m).grade]));
+}
+
+function buildSuggestions(d,grade,risk){
+  const tips=[];
+  const h=+d.hours_studied||0,at=+d.attendance||0,sl=+d.sleep_hours||0;
+  const st=+d.stress_level||0,sc=+d.screen_time||0,ea=+d.exam_anxiety||0;
+  const tu=+d.tutoring_sessions||0,gp=+d.previous_gpa||0;
+  if(h<3)tips.push({icon:'📚',text:`Study hours critically low (${h.toFixed(1)}h/day). Target 6–8h daily with Pomodoro: 25 min focused + 5 min break.`,severity:'high'});
+  else if(h<5)tips.push({icon:'📖',text:`Study hours (${h.toFixed(1)}h) below optimal. Increase to 5+ hours daily for meaningful improvement.`,severity:'medium'});
+  if(at<70)tips.push({icon:'🏫',text:`Attendance critically low (${at.toFixed(0)}%). Attend every remaining class immediately — failure risk is very high.`,severity:'high'});
+  else if(at<80)tips.push({icon:'🎒',text:`Attendance (${at.toFixed(0)}%) below 80% threshold. Target 85%+ to significantly reduce academic risk.`,severity:'medium'});
+  if(sl<6)tips.push({icon:'😴',text:`Sleep deprivation (${sl.toFixed(0)}h) impairs memory consolidation by 40%+. Aim for 7–8 hours every night.`,severity:'high'});
+  if(st>8)tips.push({icon:'🧘',text:`Extreme stress (${st.toFixed(0)}/10). Seek university counselling immediately — this level significantly impairs learning.`,severity:'high'});
+  else if(st>6)tips.push({icon:'🌿',text:`Elevated stress (${st.toFixed(0)}/10). Try daily 30-min exercise, box breathing (4-4-6s), or mindfulness apps.`,severity:'medium'});
+  if(ea>7)tips.push({icon:'😰',text:`High exam anxiety (${ea.toFixed(0)}/10). Practice 2+ timed mock exams/week and start revision 3 weeks early.`,severity:'medium'});
+  if(sc>6)tips.push({icon:'📵',text:`Screen time (${sc.toFixed(0)}h/day) is high. Limit recreational use to under 2 hours using app timers.`,severity:'medium'});
+  if(tu===0&&['C','D','F'].includes(grade))tips.push({icon:'👨‍🏫',text:'No tutoring sessions. Students with 2+ weekly sessions score 1.5 grade points higher on average.',severity:'high'});
+  if(gp<2.5)tips.push({icon:'📈',text:`Previous GPA (${gp.toFixed(2)}) is low. Focus on foundational concepts and seek academic support early.`,severity:'medium'});
+  if(!tips.length)tips.push({icon:'✅',text:'Excellent academic profile! Stay consistent and maintain your habits. You are on track for outstanding results.',severity:'low'});
+  return tips.slice(0,6);
+}
+
+/* ── MAIN PREDICTION ── */
+async function runPredict(){
+  const btn=document.getElementById('predBtn');
+  btn.disabled=true;btn.innerHTML='<div class="spinner"></div>&nbsp;Analysing…';
+  document.getElementById('predPH').style.display='none';
+  document.getElementById('resPanel').style.display='none';
+  await new Promise(r=>setTimeout(r,650));
+
+  const d={
+    hours_studied:document.getElementById('sHS').value,
+    attendance:document.getElementById('sAT').value,
+    previous_gpa:document.getElementById('sGP').value,
+    tutoring_sessions:document.getElementById('sTU').value,
+    sleep_hours:document.getElementById('sSL').value,
+    stress_level:document.getElementById('sST').value,
+    screen_time:document.getElementById('sSC').value,
+    exam_anxiety:document.getElementById('sEA').value,
+    gender:document.getElementById('sGender').value,
+    age:document.getElementById('sAge').value,
+    part_time_job:document.getElementById('sJob').value,
+    study_method:document.getElementById('sMethod').value,
+    diet_quality:document.getElementById('sDiet').value,
+    internet_quality:document.getElementById('sNet').value,
+    extracurricular:document.getElementById('sExtra').value,
+    family_income:document.getElementById('sIncome').value,
+  };
+  lastInput=d;
+
+  const skModel=document.getElementById('modelSelSk').value;
+  const dlModel=document.getElementById('modelSelDl').value;
+  const chosenModel=dlModel||skModel||'random_forest';
+
+  let result=null;
+  if(backendOnline){
+    try{
+      const r=await fetch(API+'/predict',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({...d,model:chosenModel}),signal:AbortSignal.timeout(10000)});
+      if(r.ok){
+        const data=await r.json();
+        /* Normalise any legacy High/Medium/Low risk labels from backend */
+        let riskLabel=data.risk_level||data.risk?.level||'Not At Risk';
+        if(riskLabel==='High'||riskLabel==='Medium')riskLabel='At Risk';
+        if(riskLabel==='Low')riskLabel='Not At Risk';
+        result={
+          grade:data.predicted_grade||data.grade?.prediction,
+          risk:riskLabel,
+          gpa:data.estimated_gpa||data.gpa,
+          conf:data.confidence||data.grade?.confidence||75,
+          scoreNum:data.predicted_score||null,
+          probaMap:data.probability||data.grade?.probabilities,
+          suggestions:data.suggestions,
+          fi:data.feature_importance,
+          modelUsed:data.model_used||chosenModel,
+          allPreds:data.all_model_preds||null,
+          fromBackend:true
+        };
+      }
+    }catch(e){console.warn('Backend error:',e)}
+  }
+
+  if(!result){
+    const p=clientPredict(d,chosenModel);
+    const allPreds=buildAllModelPreds(d);
+    result={grade:p.grade,risk:p.risk,gpa:p.gpa,conf:p.conf,scoreNum:p.scoreNum,probaMap:p.probaMap,
+      suggestions:buildSuggestions(d,p.grade,p.risk),fi:null,modelUsed:chosenModel,allPreds,fromBackend:false};
+  }
+
+  lastResult=result;
+  displayResult(result,d);
+  saveHistory(d,result);
+  btn.disabled=false;btn.innerHTML='<i class="bi bi-lightning-charge-fill"></i>&nbsp;Predict Performance';
+  toast(`Grade ${result.grade} · ${result.risk}`,result.grade==='A'||result.grade==='B'?'success':'info');
+}
+
+/* ── DISPLAY RESULT ── */
+function displayResult(r,d){
+  document.getElementById('resPanel').style.display='block';
+  const g=r.grade||'B';
+  const risk=r.risk||'Not At Risk';
+  const gc=GC[g]||'#4d8bff';
+  const rc=RC[risk]||'#00e09a';
+
+  /* Grade card */
+  const gCard=document.getElementById('resGradeCard');
+  gCard.style.borderColor=gc;gCard.style.background=gc+'18';
+  const gl=document.getElementById('resGrade');gl.textContent=g;gl.style.color=gc;
+  document.getElementById('resConf').textContent=(r.conf||75)+'% confidence';
+  const cb=document.getElementById('resConfBar');cb.style.width=(r.conf||75)+'%';cb.style.background=gc;
+  document.getElementById('resFromBadge').textContent=r.fromBackend?'✅ Backend RF':'⚡ Client Sim';
+  document.getElementById('resFromBadge').className='chip '+(r.fromBackend?'chip-g':'chip-a');
+  document.getElementById('resModelLbl').textContent=`Model: ${MODEL_DISPLAY[r.modelUsed]||r.modelUsed||'Random Forest'}`;
+
+  /* Risk card — BINARY */
+  const rCard=document.getElementById('resRiskCard');
+  rCard.style.borderColor=rc+'55';
+  /* Icon: warning for At Risk, checkmark for Not At Risk */
+  document.getElementById('resRiskIco').textContent=risk==='At Risk'?'⚠️':'✅';
+  const rn=document.getElementById('resRiskName');rn.textContent=risk;rn.style.color=rc;
+  if(r.gpa!=null)document.getElementById('resGpa').textContent=typeof r.gpa==='number'?r.gpa.toFixed(2):r.gpa;
+  if(r.scoreNum!=null)document.getElementById('resScore').textContent=r.scoreNum+'/100';
+
+  /* Grade probability bars */
+  const grades=['F','D','C','B','A'];
+  document.getElementById('probBars').innerHTML=grades.map((gr,i)=>`
+  <div class="prob-row" style="animation-delay:${i*0.07}s">
+    <div class="pr-grade" style="color:${GC[gr]}">${gr}</div>
+    <div class="pr-track"><div class="pr-fill" style="width:${r.probaMap?.[gr]||0}%;background:${GC[gr]}"></div></div>
+    <div class="pr-pct">${r.probaMap?.[gr]||0}%</div>
+  </div>`).join('');
+
+  /* Feature importance */
+  const fi=r.fi||FI_BASE;
+  const fiEnt=Object.entries(fi).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const fiMax=fiEnt[0][1];
+  document.getElementById('resFI').innerHTML=fiEnt.map(([k,v])=>`
+  <div class="fi-row">
+    <div class="fi-lbl">${k.replace(/_/g,' ')}</div>
+    <div class="fi-track"><div class="fi-fill" style="width:${(v/fiMax*100).toFixed(1)}%"></div></div>
+    <div class="fi-pct">${(v*100).toFixed(1)}%</div>
+  </div>`).join('');
+
+  /* Suggestions */
+  const sugs=r.suggestions||buildSuggestions(d,g,risk);
+  document.getElementById('resSugs').innerHTML=sugs.map((s,i)=>{
+    const sev=typeof s==='object'?s.severity||'low':'low';
+    const ico=typeof s==='object'?s.icon||'💡':'💡';
+    const txt=typeof s==='object'?s.text||s.message||'':String(s);
+    return`<div class="sug-item ${sev}" style="animation-delay:${i*0.07}s">
+      <div class="sug-ico">${ico}</div>
+      <div class="sug-txt">${txt}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('resModelSub').textContent=`${MODEL_DISPLAY[r.modelUsed]||r.modelUsed||'Random Forest'} · ${r.fromBackend?'Real model prediction':'Client simulation'}`;
+
+  /* All models comparison */
+  const allPreds=r.allPreds||buildAllModelPreds(d);
+  const aEl=document.getElementById('allModelPreds');
+  aEl.innerHTML=Object.entries(MODEL_DISPLAY).map(([key,name])=>{
+    const pred=allPreds[key]||clientPredict(d,key).grade;
+    const c=GC[pred]||'#4d8bff';
+    const isChosen=key===r.modelUsed;
+    return`<div style="display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--bg3);border:1px solid ${isChosen?c:'var(--border)'};border-radius:var(--rs);${isChosen?`box-shadow:0 0 12px ${c}33`:''}">
+      <span style="font-size:10px;color:${isChosen?c:'var(--t3)'};">${MODEL_TYPES[key]==='DL'?'🧠':'🤖'}</span>
+      <div style="flex:1;min-width:0"><div style="font-size:10.5px;color:${isChosen?'var(--t1)':'var(--t2)'};font-weight:${isChosen?700:500};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</div>
+      <div style="font-size:9px;color:var(--t3);font-family:var(--ff-m)">${MODEL_TYPES[key]}</div></div>
+      <span class="gb g-${pred}">${pred}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('resPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ── REPORT & SHARING ── */
+function buildReportText(){
+  if(!lastResult||!lastInput)return'';
+  const r=lastResult,d=lastInput;
+  return[`== EduAI Predict — Academic Performance Report ==`,
+  `Date: ${new Date().toLocaleString()}`,`Model: ${MODEL_DISPLAY[r.modelUsed]||r.modelUsed}`,
+  `Source: ${r.fromBackend?'Backend RF Model':'Client-Side Simulation'}`,``,
+  `-- PREDICTION RESULTS --`,`Predicted Grade: ${r.grade}  (${r.conf}% confidence)`,
+  `Risk Level: ${r.risk}  (Binary: At Risk / Not At Risk)`,
+  `Predicted GPA: ${r.gpa?.toFixed?r.gpa.toFixed(2):r.gpa}`,
+  `Predicted Score: ${r.scoreNum||'—'}/100`,``,`-- YOUR PROFILE --`,
+  `Hours Studied/Day: ${(+d.hours_studied).toFixed(1)}h`,`Attendance: ${(+d.attendance).toFixed(1)}%`,
+  `Previous GPA: ${(+d.previous_gpa).toFixed(2)}`,`Tutoring Sessions/Week: ${d.tutoring_sessions}`,
+  `Sleep Hours: ${(+d.sleep_hours).toFixed(1)}h`,`Stress Level: ${d.stress_level}/10`,
+  `Screen Time: ${(+d.screen_time).toFixed(1)}h/day`,`Exam Anxiety: ${d.exam_anxiety}/10`,
+  `Gender: ${d.gender}  |  Age: ${d.age}`,`Study Method: ${d.study_method}  |  Part-Time Job: ${d.part_time_job}`,
+  `Diet: ${d.diet_quality}  |  Internet: ${d.internet_quality}`,
+  `Extracurricular: ${d.extracurricular}  |  Family Income: ${d.family_income}`,``,
+  `-- GRADE PROBABILITIES --`,
+  ...Object.entries(r.probaMap||{}).map(([g,p])=>`  Grade ${g}: ${p}%`),``,
+  `-- AI RECOMMENDATIONS --`,
+  ...(r.suggestions||[]).map((s,i)=>`${i+1}. ${typeof s==='object'?s.text||s.message:s}`),``,
+  `Generated by EduAI Predict  |  FYP Research Tool`,
+  `Note: For academic guidance only. Consult your academic advisor.`].join('\n');
+}
+
+function downloadReport(){
+  if(!lastResult){toast('Run a prediction first','error');return}
+  const blob=new Blob([buildReportText()],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`EduAI_Report_${new Date().toISOString().slice(0,10)}.txt`;a.click();
+  toast('Report downloaded','success');
+}
+function downloadCSVReport(){
+  if(!lastResult){toast('Run a prediction first','error');return}
+  const r=lastResult,d=lastInput;
+  const rows=[['Field','Value'],['Date',new Date().toLocaleString()],['Model',MODEL_DISPLAY[r.modelUsed]||r.modelUsed],
+    ['Grade',r.grade],['Confidence %',r.conf],['Risk (Binary)',r.risk],['GPA',r.gpa],['Score',r.scoreNum],
+    ['Hours_Studied',d.hours_studied],['Attendance',d.attendance],['Previous_GPA',d.previous_gpa],
+    ['Sleep',d.sleep_hours],['Stress',d.stress_level],['Exam_Anxiety',d.exam_anxiety],['Screen_Time',d.screen_time]];
+  const blob=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`EduAI_CSV_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  toast('CSV downloaded','success');
+}
+function downloadJSON(){
+  if(!lastResult){toast('Run a prediction first','error');return}
+  const blob=new Blob([JSON.stringify({timestamp:new Date().toISOString(),result:lastResult,input:lastInput},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`EduAI_Data_${new Date().toISOString().slice(0,10)}.json`;a.click();
+  toast('JSON downloaded','success');
+}
+function shareResult(p){
+  if(!lastResult){toast('Run a prediction first','error');return}
+  const r=lastResult;
+  const msg=encodeURIComponent(`📊 My EduAI Academic Prediction:\nGrade: ${r.grade} | Risk: ${r.risk} | GPA: ${r.gpa?.toFixed?r.gpa.toFixed(2):r.gpa}\nModel: ${MODEL_DISPLAY[r.modelUsed]||'Random Forest'}\n#EduAI #StudentPerformance #AI`);
+  const links={whatsapp:`https://wa.me/?text=${msg}`,twitter:`https://twitter.com/intent/tweet?text=${msg}`,linkedin:`https://www.linkedin.com/sharing/share-offsite/?summary=${msg}`};
+  if(links[p])window.open(links[p],'_blank','width=600,height=400');
+}
+function copyResult(){
+  if(!lastResult){toast('Run a prediction first','error');return}
+  const r=lastResult;
+  navigator.clipboard.writeText(`EduAI: Grade ${r.grade}, ${r.risk}, GPA ${r.gpa?.toFixed?r.gpa.toFixed(2):r.gpa}`)
+    .then(()=>toast('Result copied!','success')).catch(()=>{prompt('Copy:',buildReportText())});
+}
+
+/* ── CHARTS ── */
+Chart.defaults.color='#7a9acc';Chart.defaults.font={family:"'Outfit',sans-serif",size:11};
+function mkChart(id,cfg){
+  if(allCharts[id]){try{allCharts[id].destroy()}catch{}delete allCharts[id]}
+  const c=document.getElementById(id);if(!c)return null;
+  return allCharts[id]=new Chart(c,cfg);
+}
+
+function buildDashCharts(){
+  const gdata={A:12000,B:11500,C:10000,D:9000,F:7500};
+  const gcols=Object.keys(gdata).map(g=>GC[g]);
+  mkChart('gradePieChart',{type:'doughnut',data:{labels:Object.keys(gdata),datasets:[{data:Object.values(gdata),backgroundColor:gcols.map(c=>c+'bb'),borderColor:gcols,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'66%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw.toLocaleString()} (${((c.raw/50000)*100).toFixed(1)}%)`}}}}});
+  const lg=document.getElementById('gradeLeg');
+  if(lg)lg.innerHTML=Object.entries(gdata).map(([l,v],i)=>`<div style="display:flex;align-items:center;gap:4px;font-size:9.5px;color:var(--t2)"><div style="width:8px;height:8px;border-radius:50%;background:${gcols[i]}"></div>${l}: ${((v/50000)*100).toFixed(1)}%</div>`).join('');
+
+  const topModels=[['SAINT',91.3],['FT-Transformer',91.5],['Stacking',91.0],['LightGBM',90.2],['CatBoost',90.6],['TabFormer',91.2]];
+  mkChart('modelPerfChart',{type:'bar',data:{labels:topModels.map(m=>m[0]),datasets:[{label:'Accuracy %',data:topModels.map(m=>m[1]),backgroundColor:['rgba(77,139,255,.7)','rgba(0,245,212,.7)','rgba(0,224,154,.7)','rgba(255,190,61,.7)','rgba(176,110,255,.7)','rgba(255,93,162,.7)'],borderColor:topModels.map((_,i)=>['#4d8bff','#00f5d4','#00e09a','#ffbe3d','#b06eff','#ff5da2'][i]),borderWidth:2,borderRadius:8,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(77,139,255,.05)'},ticks:{font:{size:10}}},y:{grid:{color:'rgba(77,139,255,.05)'},min:88,max:93,ticks:{callback:v=>v+'%'}}}}});
+
+  const fiEl=document.getElementById('dashFI');
+  if(fiEl){
+    const ent=Object.entries(FI_BASE).slice(0,9),mx=ent[0][1];
+    fiEl.innerHTML=ent.map(([k,v])=>`
+    <div class="fi-row"><div class="fi-lbl">${k.replace(/_/g,' ')}</div>
+    <div class="fi-track"><div class="fi-fill" style="width:${(v/mx*100).toFixed(1)}%"></div></div>
+    <div class="fi-pct">${(v*100).toFixed(1)}%</div></div>`).join('');
+  }
+
+  /* Risk donut — binary labels */
+  mkChart('riskDonut',{type:'doughnut',data:{labels:['At Risk','Not At Risk'],datasets:[{data:[16500,33500],backgroundColor:['rgba(255,64,96,.7)','rgba(0,224,154,.7)'],borderColor:['#ff4060','#00e09a'],borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:10}}}}});
+}
+
+/* ── SAMPLE TABLE ── */
+let sampleRows=[];
+function buildSampleTable(){
+  sampleRows=SAMPLE_ROWS.map(s=>{const p=clientPredict(s);return{...s,predicted:p.grade,risk:p.risk,pred_gpa:p.gpa}});
+  renderDashTbl(sampleRows);
+  buildTeacherView(sampleRows);
+}
+
+/* riskClass: converts 'At Risk' → 'r-AtRisk', 'Not At Risk' → 'r-NotAtRisk' */
+function riskClass(r){return'r-'+r.replace(/ /g,'');}
+
+function renderDashTbl(rows){
+  const tb=document.getElementById('dashTbody');if(!tb)return;
+  tb.innerHTML=rows.map(s=>`<tr>
+    <td class="mono">${s.id}</td><td>${(+s.hours_studied).toFixed(1)}h</td><td>${(+s.attendance).toFixed(0)}%</td>
+    <td>${(+s.previous_gpa).toFixed(2)}</td><td>${(+s.sleep_hours).toFixed(1)}h</td>
+    <td>${(+s.stress_level).toFixed(1)}</td><td>${(+s.exam_anxiety).toFixed(1)}</td>
+    <td><span class="gb g${s.final_grade}">${s.final_grade}</span></td>
+    <td><span class="gb g${s.predicted}">${s.predicted}</span></td>
+    <td><span class="gb ${riskClass(s.risk)}">${s.risk}</span></td>
+    <td class="mono">${s.pred_gpa?.toFixed(2)||'—'}</td>
+  </tr>`).join('');
+}
+function filterDashTbl(){
+  const q=(document.getElementById('tSearch')?.value||'').toLowerCase();
+  const gf=document.getElementById('gFiltD')?.value||'';
+  const rf=document.getElementById('rFiltD')?.value||'';
+  renderDashTbl(sampleRows.filter(s=>(!q||s.id.toLowerCase().includes(q))&&(!gf||s.final_grade===gf)&&(!rf||s.risk===rf)));
+}
+
+/* ── TEACHER VIEW ── */
+let bulkData=[];
+function buildTeacherView(rows){
+  bulkData=rows||sampleRows;
+  /* Count At Risk students (binary) */
+  const rH=bulkData.filter(s=>s.risk==='At Risk').length;
+  const gA=bulkData.filter(s=>s.predicted==='A').length;
+  const avgGpa=(bulkData.reduce((a,s)=>a+(+s.previous_gpa||0),0)/bulkData.length).toFixed(2);
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+  set('t-total',bulkData.length);set('t-risk',rH);set('t-gradeA',gA);set('t-avgGpa',avgGpa);
+  if(rH>0){
+    document.getElementById('riskAlertBanner').style.display='flex';
+    /* Only At Risk students in alert list */
+    document.getElementById('riskAlertList').textContent=bulkData.filter(s=>s.risk==='At Risk').slice(0,6).map(s=>s.id).join(', ')+(rH>6?` +${rH-6} more`:'');
+  }else{
+    document.getElementById('riskAlertBanner').style.display='none';
+  }
+  const gd={A:0,B:0,C:0,D:0,F:0};bulkData.forEach(s=>{if(s.predicted in gd)gd[s.predicted]++});
+  mkChart('teachGradeChart',{type:'bar',data:{labels:Object.keys(gd),datasets:[{data:Object.values(gd),backgroundColor:Object.keys(gd).map(g=>GC[g]+'aa'),borderColor:Object.keys(gd).map(g=>GC[g]),borderWidth:2,borderRadius:8}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(77,139,255,.05)'}},y:{grid:{color:'rgba(77,139,255,.05)'}}}}});
+  const bins=Array(6).fill(0);bulkData.forEach(s=>bins[Math.min(Math.floor((+s.hours_studied||0)/2),5)]++);
+  mkChart('teachHoursChart',{type:'bar',data:{labels:['0-2h','2-4h','4-6h','6-8h','8-10h','10-12h'],datasets:[{label:'Students',data:bins,backgroundColor:'rgba(77,139,255,.5)',borderColor:'#4d8bff',borderWidth:2,borderRadius:7}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(77,139,255,.05)'}},y:{grid:{color:'rgba(77,139,255,.05)'}}}}});
+  renderTeachTbl(bulkData);
+}
+function renderTeachTbl(rows){
+  const tb=document.getElementById('teachTbody');if(!tb)return;
+  if(!rows.length){tb.innerHTML='<tr><td colspan="11" style="text-align:center;padding:26px;color:var(--t3)">No records</td></tr>';return}
+  tb.innerHTML=rows.map(s=>`<tr>
+    <td class="mono">${s.id}</td><td>${s.age||'—'}</td><td>${s.gender||'—'}</td>
+    <td>${(+s.hours_studied||0).toFixed(1)}h</td><td>${(+s.attendance||0).toFixed(0)}%</td>
+    <td>${(+s.previous_gpa||0).toFixed(2)}</td><td>${(+s.sleep_hours||0).toFixed(1)}h</td>
+    <td>${(+s.stress_level||0).toFixed(1)}</td><td>${(+s.exam_anxiety||0).toFixed(1)}</td>
+    <td><span class="gb g${s.predicted}">${s.predicted}</span></td>
+    <td><span class="gb ${riskClass(s.risk)}">${s.risk}</span></td>
+  </tr>`).join('');
+}
+function filterTeachTbl(){
+  const q=(document.getElementById('tSearch2')?.value||'').toLowerCase();
+  const gf=document.getElementById('gFilt2')?.value||'';
+  renderTeachTbl(bulkData.filter(s=>(!q||String(s.id).toLowerCase().includes(q))&&(!gf||s.predicted===gf)));
+}
+
+/* ── FILE UPLOAD ── */
+function handleDrop(e){e.preventDefault();document.getElementById('upZone').classList.remove('drag');handleFile(e.dataTransfer.files[0])}
+function handleFile(file){
+  if(!file)return;
+  const st=document.getElementById('upStatus'),pw=document.getElementById('upProgWrap'),pf=document.getElementById('upFill'),bo=document.getElementById('bulkOut');
+  st.textContent=`⏳ Processing ${file.name}…`;pw.style.display='block';pf.style.width='0%';bo.innerHTML='';
+  if(!file.name.toLowerCase().endsWith('.csv')){st.innerHTML='<span style="color:var(--red)">Only CSV files supported.</span>';return}
+  let p=0;const pi=setInterval(()=>{p=Math.min(p+18,80);pf.style.width=p+'%'},180);
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    clearInterval(pi);pf.style.width='100%';
+    const lines=ev.target.result.split('\n').filter(l=>l.trim());
+    if(lines.length<2){st.innerHTML='<span style="color:var(--red)">File empty.</span>';return}
+    const headers=lines[0].split(',').map(h=>h.trim().toLowerCase());
+    const records=lines.slice(1,301).map(line=>{const vals=line.split(',');const obj={};headers.forEach((h,i)=>obj[h]=(vals[i]||'').trim());return obj}).filter(r=>r.hours_studied||r.attendance);
+    if(!records.length){st.innerHTML='<span style="color:var(--red)">No valid records found.</span>';return}
+    bulkData=records.map((r,i)=>{const pr=clientPredict(r);return{id:r.id||`ROW${i+1}`,age:r.age||'—',gender:r.gender||'—',...r,predicted:pr.grade,risk:pr.risk,pred_gpa:pr.gpa}});
+    buildTeacherView(bulkData);
+    /* Count At Risk (binary) */
+    const atRisk=bulkData.filter(s=>s.risk==='At Risk').length;
+    const gd={A:0,B:0,C:0,D:0,F:0};bulkData.forEach(s=>{if(s.predicted in gd)gd[s.predicted]++});
+    st.innerHTML=`✅ Processed <strong>${bulkData.length}</strong> records`;
+    bo.innerHTML=`<div class="alert alert-success" style="margin-top:10px"><i class="bi bi-check-circle-fill"></i> ${atRisk} at-risk students identified. <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">${Object.entries(gd).map(([g,c])=>`<span class="chip chip-${g==='A'?'g':g==='B'?'b':g==='C'?'a':'r'}">${g}: ${c}</span>`).join('')}</div></div>`;
+    toast(`${bulkData.length} records processed — ${atRisk} at risk`,'success');
+  };
+  reader.onerror=()=>{clearInterval(pi);st.innerHTML='<span style="color:var(--red)">Error reading file.</span>'};
+  reader.readAsText(file);
+}
+
+function exportBulkCSV(){
+  if(!bulkData.length){toast('No data','error');return}
+  const rows=[['ID','Age','Gender','Hours','Attendance','GPA','Sleep','Stress','Anxiety','Predicted','Risk']];
+  bulkData.forEach(s=>rows.push([s.id,s.age,s.gender,(+s.hours_studied||0).toFixed(1),(+s.attendance||0).toFixed(0),(+s.previous_gpa||0).toFixed(2),(+s.sleep_hours||0).toFixed(1),(+s.stress_level||0).toFixed(1),(+s.exam_anxiety||0).toFixed(1),s.predicted,s.risk]));
+  const blob=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='eduai_bulk_predictions.csv';a.click();
+  toast('CSV exported','success');
+}
+
+/* ── MODEL PERFORMANCE TABLES ── */
+function renderModelTables(){
+  const rm=Object.entries(DEFAULT_METRICS.risk).sort((a,b)=>(b[1].accuracy||0)-(a[1].accuracy||0));
+  const rMax=rm[0][1].accuracy;
+  document.getElementById('riskModelTbody').innerHTML=rm.map(([name,m],i)=>`
+  <tr class="${i===0?'best':''}">
+    <td><span style="font-weight:${i===0?700:500};color:${i===0?'var(--green)':'var(--t2)'}">${MODEL_DISPLAY[name]||name}</span>${i===0?'<span class="chip chip-g" style="margin-left:6px">Best</span>':''}</td>
+    <td><span class="chip chip-${MODEL_TYPES[name]==='DL'?'p':'b'}" style="font-size:8.5px">${MODEL_TYPES[name]}</span></td>
+    <td><div class="perf-bar"><div class="perf-fill" style="width:${(m.accuracy/rMax*100).toFixed(0)}%"></div></div><span class="mono">${(m.accuracy*100).toFixed(2)}%</span></td>
+    <td class="mono">${(m.f1*100).toFixed(2)}%</td>
+    <td class="mono">${((m.auc_roc||0)*100).toFixed(2)}%</td>
+  </tr>`).join('');
+
+  const gm=Object.entries(DEFAULT_METRICS.grade).sort((a,b)=>(b[1].accuracy||0)-(a[1].accuracy||0));
+  const gMax=gm[0][1].accuracy;
+  document.getElementById('gradeModelTbody').innerHTML=gm.map(([name,m],i)=>`
+  <tr class="${i===0?'best':''}">
+    <td><span style="font-weight:${i===0?700:500};color:${i===0?'var(--green)':'var(--t2)'}">${MODEL_DISPLAY[name]||name}</span>${i===0?'<span class="chip chip-g" style="margin-left:6px">Best</span>':''}</td>
+    <td><span class="chip chip-${MODEL_TYPES[name]==='DL'?'p':'b'}" style="font-size:8.5px">${MODEL_TYPES[name]}</span></td>
+    <td><div class="perf-bar"><div class="perf-fill" style="width:${(m.accuracy/gMax*100).toFixed(0)}%"></div></div><span class="mono">${(m.accuracy*100).toFixed(2)}%</span></td>
+    <td class="mono">${(m.f1*100).toFixed(2)}%</td>
+  </tr>`).join('');
+
+  const pm=Object.entries(DEFAULT_METRICS.gpa).sort((a,b)=>(b[1].r2||0)-(a[1].r2||0));
+  document.getElementById('gpaModelTbody').innerHTML=pm.map(([name,m],i)=>`
+  <tr class="${i===0?'best':''}">
+    <td><span style="font-weight:${i===0?700:500};color:${i===0?'var(--green)':'var(--t2)'}">${MODEL_DISPLAY[name]||name}</span>${i===0?'<span class="chip chip-g" style="margin-left:6px">Best</span>':''}</td>
+    <td><span class="chip chip-${MODEL_TYPES[name]==='DL'?'p':'b'}" style="font-size:8.5px">${MODEL_TYPES[name]}</span></td>
+    <td class="mono">${(m.r2||0).toFixed(4)}</td>
+    <td class="mono">${(m.rmse||0).toFixed(4)}</td>
+    <td class="mono">${(m.mae||0).toFixed(4)}</td>
+  </tr>`).join('');
+
+  const allModels=Object.entries(DEFAULT_METRICS.risk).map(([name,m])=>({name:MODEL_DISPLAY[name]||name,acc:+(m.accuracy*100).toFixed(2),type:MODEL_TYPES[name]}));
+  allModels.sort((a,b)=>b.acc-a.acc);
+  mkChart('allModelsChart',{type:'bar',data:{labels:allModels.map(m=>m.name),datasets:[{label:'Accuracy %',data:allModels.map(m=>m.acc),backgroundColor:allModels.map(m=>m.type==='DL'?'rgba(176,110,255,.7)':'rgba(77,139,255,.7)'),borderColor:allModels.map(m=>m.type==='DL'?'#b06eff':'#4d8bff'),borderWidth:1.5,borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:60}},y:{grid:{color:'rgba(77,139,255,.05)'},min:84,ticks:{callback:v=>v+'%'}}}}});
+
+  const top5=['ft_transformer','saint','tabformer','stacking','catboost'];
+  mkChart('radarChart',{type:'radar',data:{labels:['Risk Acc','Grade Acc','GPA R²','Risk F1','Grade F1'],datasets:top5.map((name,i)=>{
+    const rm2=DEFAULT_METRICS.risk[name]||{},gm2=DEFAULT_METRICS.grade[name]||{},pm2=DEFAULT_METRICS.gpa[name]||{};
+    const colors=['rgba(77,139,255,.6)','rgba(0,245,212,.6)','rgba(0,224,154,.6)','rgba(255,190,61,.6)','rgba(176,110,255,.6)'];
+    const borders=['#4d8bff','#00f5d4','#00e09a','#ffbe3d','#b06eff'];
+    return{label:MODEL_DISPLAY[name],data:[+(rm2.accuracy||0)*100,+(gm2.accuracy||0)*100,+(pm2.r2||0)*100,+(rm2.f1||0)*100,+(gm2.f1||0)*100],backgroundColor:colors[i],borderColor:borders[i],borderWidth:2,pointRadius:4};
+  })},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'var(--t2)',font:{size:9},padding:8}}},scales:{r:{grid:{color:'rgba(77,139,255,.1)'},ticks:{color:'var(--t3)',backdropColor:'transparent',font:{size:9}},pointLabels:{color:'var(--t2)',font:{size:10}},min:85,max:95}}}});
+
+  document.getElementById('ms-riskBest').textContent=(DEFAULT_METRICS.risk.saint.accuracy*100).toFixed(1)+'%';
+  document.getElementById('ms-gradeBest').textContent=(DEFAULT_METRICS.grade.saint.accuracy*100).toFixed(1)+'%';
+  document.getElementById('ms-gpaBest').textContent=DEFAULT_METRICS.gpa.stacking.r2.toFixed(4);
+}
+
+/* ── EXPLAINABILITY ── */
+function buildExplainPage(){
+  const gFI=document.getElementById('globalFI');
+  if(gFI){const ent=Object.entries(FI_BASE),mx=ent[0][1];
+    gFI.innerHTML=ent.map(([k,v])=>`
+    <div class="fi-row"><div class="fi-lbl">${k.replace(/_/g,' ')}</div>
+    <div class="fi-track"><div class="fi-fill" style="width:${(v/mx*100).toFixed(1)}%"></div></div>
+    <div class="fi-pct">${(v*100).toFixed(1)}%</div></div>`).join('');}
+  const fiKeys=Object.keys(FI_BASE),fiVals=Object.values(FI_BASE).map(v=>+(v*100).toFixed(2));
+  mkChart('fiBarChart',{type:'bar',data:{labels:fiKeys.map(k=>k.replace(/_/g,' ')),datasets:[{data:fiVals,backgroundColor:fiVals.map(v=>v>16?'rgba(77,139,255,.8)':'rgba(77,139,255,.4)'),borderColor:'#4d8bff',borderWidth:1.5,borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(77,139,255,.05)'},ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  if(lastInput)buildWaterfall();
+  wiFeatureChange();
+}
+
+function buildWaterfall(){
+  const el=document.getElementById('explainWaterfall');if(!el||!lastInput)return;
+  const d=lastInput,r=lastResult;
+  if(r)document.getElementById('explainSub').textContent=`Grade ${r.grade} · ${r.conf}% confidence · ${MODEL_DISPLAY[r.modelUsed]||'RF'} · Risk: ${r.risk}`;
+  const contribs={
+    hours_studied:(+d.hours_studied-5)*FI_BASE.hours_studied*2.5,
+    previous_gpa:(+d.previous_gpa-2.5)*FI_BASE.previous_gpa*2.8,
+    attendance:(+d.attendance-75)*FI_BASE.attendance*.065,
+    exam_anxiety:-(+d.exam_anxiety-5)*FI_BASE.exam_anxiety*1.2,
+    stress_level:-(+d.stress_level-5)*FI_BASE.stress_level*1.1,
+    tutoring_sessions:(+d.tutoring_sessions-2)*FI_BASE.tutoring_sessions*1.0,
+    sleep_hours:(+d.sleep_hours-7)*FI_BASE.sleep_hours*.9,
+    screen_time:-(+d.screen_time-3)*FI_BASE.screen_time*.8,
+  };
+  const sorted=Object.entries(contribs).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+  const mx=Math.max(...sorted.map(([,v])=>Math.abs(v)));
+  el.innerHTML=sorted.map(([k,v])=>{
+    const pct=Math.abs(v)/mx*47;const pos=v>0;
+    return`<div class="wf-row">
+      <div class="wf-lbl">${k.replace(/_/g,' ')}</div>
+      <div class="wf-bar-wrap"><div class="wf-mid"></div>
+        ${!pos?`<div class="wf-neg" style="width:${pct.toFixed(1)}%"></div>`:''}
+        ${pos?`<div class="wf-pos" style="width:${pct.toFixed(1)}%"></div>`:''}
+      </div>
+      <div class="wf-val" style="color:${pos?'var(--green)':'var(--red)'}">${v>0?'+':''}${v.toFixed(2)}</div>
+    </div>`;
+  }).join('');
+}
+
+function wiFeatureChange(){
+  const feat=document.getElementById('wiFeature')?.value||'hours_studied';
+  const limits={hours_studied:[0,12],attendance:[40,100],exam_anxiety:[0,10],stress_level:[0,10],previous_gpa:[0,4],sleep_hours:[2,12],screen_time:[0,12],tutoring_sessions:[0,10]};
+  const sl=document.getElementById('wiSlider');
+  if(sl&&limits[feat]){
+    sl.min=limits[feat][0];sl.max=limits[feat][1];
+    sl.value=lastInput?(+lastInput[feat])||((+limits[feat][0]+(+limits[feat][1]))/2):((+limits[feat][0]+(+limits[feat][1]))/2);
+  }
+  document.getElementById('wiLbl').textContent=feat.replace(/_/g,' ')+': ';
+  updateWhatIf();
+}
+function updateWhatIf(){
+  if(!lastInput)return;
+  const feat=document.getElementById('wiFeature')?.value||'hours_studied';
+  const val=parseFloat(document.getElementById('wiSlider')?.value||0);
+  document.getElementById('wiValDisp').textContent=val.toFixed(feat==='previous_gpa'?2:1);
+  const nr=clientPredict({...lastInput,[feat]:val});
+  const orig=document.getElementById('wiOrig'),newG=document.getElementById('wiNew'),msg=document.getElementById('wiMsg');
+  if(orig)orig.textContent=lastResult?.grade||'—';
+  if(newG){newG.textContent=nr.grade;newG.style.color=GC[nr.grade]||'var(--blue)'}
+  if(msg){
+    const changed=nr.grade!==lastResult?.grade;
+    msg.textContent=changed?`🔄 Changing ${feat.replace(/_/g,' ')} to ${val.toFixed(1)} shifts predicted grade: ${lastResult?.grade} → ${nr.grade}`:
+      `No grade change at ${feat.replace(/_/g,' ')} = ${val.toFixed(1)}.`;
+    msg.style.borderLeft=changed?'3px solid var(--amber)':'none';
+    msg.style.borderRadius=changed?'0 var(--rs) var(--rs) 0':'var(--rs)';
+  }
+}
+
+/* ── HISTORY ── */
+function saveHistory(d,r){
+  const h=LS.get('hist',[]);
+  h.unshift({id:Date.now(),ts:new Date().toISOString(),d,r});
+  if(h.length>100)h.length=100;LS.set('hist',h);
+}
+function renderHistory(){
+  const el=document.getElementById('histList');if(!el)return;
+  const h=LS.get('hist',[]);
+  if(!h.length){el.innerHTML='<div style="text-align:center;padding:70px;color:var(--t3)">No predictions yet — go to Student Panel.</div>';return}
+  el.innerHTML=`<div class="tbl-wrap"><table class="dt"><thead><tr>
+    <th>Date &amp; Time</th><th>Hours</th><th>Attend%</th><th>GPA</th><th>Stress</th><th>Grade</th><th>Risk</th><th>Pred GPA</th><th>Model</th><th>Source</th><th>Actions</th>
+  </tr></thead><tbody>${h.map((item,idx)=>`
+  <tr class="hist-row" style="animation-delay:${idx*0.04}s">
+    <td style="font-size:10px;white-space:nowrap">${new Date(item.ts).toLocaleString()}</td>
+    <td>${(+item.d.hours_studied||0).toFixed(1)}h</td>
+    <td>${(+item.d.attendance||0).toFixed(0)}%</td>
+    <td>${(+item.d.previous_gpa||0).toFixed(2)}</td>
+    <td>${(+item.d.stress_level||0).toFixed(1)}</td>
+    <td><span class="gb g${item.r.grade}">${item.r.grade}</span></td>
+    <td><span class="gb ${riskClass(item.r.risk)}">${item.r.risk}</span></td>
+    <td class="mono">${item.r.gpa?.toFixed?item.r.gpa.toFixed(2):item.r.gpa||'—'}</td>
+    <td style="font-size:10px;color:var(--t3)">${MODEL_DISPLAY[item.r.modelUsed]||item.r.modelUsed||'RF'}</td>
+    <td><span class="chip ${item.r.fromBackend?'chip-g':'chip-a'}" style="font-size:8px">${item.r.fromBackend?'Backend':'Client'}</span></td>
+    <td><button class="btn btn-ghost btn-sm" onclick="reloadHistItem(${idx})"><i class="bi bi-arrow-clockwise"></i></button></td>
+  </tr>`).join('')}</tbody></table></div>`;
+}
+function reloadHistItem(idx){
+  const h=LS.get('hist',[]);if(!h[idx])return;
+  lastInput=h[idx].d;lastResult=h[idx].r;
+  displayResult(h[idx].r,h[idx].d);
+  nav('student');
+  toast('History item reloaded','info');
+}
+function exportHist(){
+  const h=LS.get('hist',[]);if(!h.length){toast('No history','error');return}
+  const rows=[['Date','Hours','Attendance','GPA','Stress','Grade','Risk','Pred_GPA','Model']];
+  h.forEach(item=>rows.push([new Date(item.ts).toLocaleString(),(+item.d.hours_studied).toFixed(1),(+item.d.attendance).toFixed(0),(+item.d.previous_gpa).toFixed(2),(+item.d.stress_level).toFixed(1),item.r.grade,item.r.risk,item.r.gpa?.toFixed?item.r.gpa.toFixed(2):'',MODEL_DISPLAY[item.r.modelUsed]||'RF']));
+  const blob=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='eduai_history.csv';a.click();
+  toast('History exported','success');
+}
+function clearHist(){if(confirm('Clear all prediction history?')){LS.del('hist');renderHistory();toast('History cleared','info')}}
+
+/* ── CHAT ── */
+const KB=[
+  {k:['hello','hi','hey','start'],r:"👋 Hi! I'm your EduAI assistant. Ask me about grade improvement, study tips, stress management, the 23 AI models, or the binary risk classification (At Risk / Not At Risk)!"},
+  {k:['improve','better','grade','boost','increase'],r:"📚 **Top grade improvement strategies:**\n1. Study 6–8h/day with Pomodoro technique\n2. Maintain 85%+ attendance\n3. Sleep 7–8h every night\n4. Join 2+ tutoring sessions/week\n5. Practice timed mock exams\n6. Limit screen time to <2h recreational"},
+  {k:['stress','burnout','pressure','overwhelm'],r:"🧘 **Managing academic stress:**\n• Break tasks into daily micro-goals\n• Exercise 30 min daily\n• Box breathing: 4s in → 4s hold → 6s out\n• Schedule study breaks every 90 min\n• University counselling services are free"},
+  {k:['sleep','tired','fatigue','rest'],r:"😴 **Sleep is critical!** 7–8h nightly. Below 6h impairs memory consolidation by 40%+. Consistent sleep schedule matters more than total hours."},
+  {k:['attend','class','lecture','skip'],r:"🏫 **Attendance is the 3rd strongest predictor.** Below 70% = high failure risk. Every session attended improves your grade probability significantly."},
+  {k:['anxiety','exam','nervous','worry','test'],r:"✍️ **Beating exam anxiety:**\n• Practice under real timed conditions\n• Start revision 3+ weeks early\n• Daily deep breathing exercises\n• Box breathing during the exam itself"},
+  {k:['risk','at risk','danger','classification'],r:"⚠️ **Binary risk classification:**\nThe model outputs exactly TWO classes:\n• **At Risk** — high probability of D/Fail grade\n• **Not At Risk** — on track to pass\n\nThreshold: combined D+Fail probability > 28% → At Risk.\nNo medium category — every student is clearly classified."},
+  {k:['model','neural','deep learning','transformer','accuracy'],r:"🤖 **About the 23 AI models:**\n**Classical ML (8):** Logistic Regression, Random Forest, Gradient Boosting, XGBoost, LightGBM, CatBoost, Stacking, TabNet\n**Deep Learning (15):** Residual NN, FT-Transformer, BiLSTM+GRU, 1D-CNN, Attention MLP, Autoencoder CLF, VAE Classifier, Wide & Deep, Swish-SELU MLP, DenseNet MLP, TabFormer, SAINT, Gated MLP, NODE, CapsuleNet\n\n🏆 **Best:** SAINT & FT-Transformer (91.5% accuracy)"},
+  {k:['feature','important','factor','weight'],r:"🔑 **Top 5 features by importance:**\n1. Previous GPA — 21.8%\n2. Hours Studied — 18.4%\n3. Attendance — 14.3%\n4. Exam Anxiety — 10.2%\n5. Stress Level — 8.8%"},
+  {k:['thank','thanks','great','awesome','helpful'],r:"😊 You're welcome! Consistent daily effort beats last-minute cramming. You've got this! 🎓"},
+];
+function getChatFallback(msg){
+  const l=msg.toLowerCase();
+  for(const {k,r} of KB)if(k.some(kw=>l.includes(kw)))return r;
+  return"🤔 I can help with: grade improvement · study techniques · stress & anxiety management · sleep tips · risk classification (binary: At Risk / Not At Risk) · 23 AI model explanations · feature importance";
+}
+function appendMsg(role,text){
+  const body=document.getElementById('chatBody');if(!body)return;
+  const d=document.createElement('div');d.className=`ch-msg ${role}`;
+  d.innerHTML=`<div class="ch-bub">${text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`(.*?)`/g,'<code>$1</code>')}</div>`;
+  body.appendChild(d);body.scrollTop=body.scrollHeight;
+}
+async function sendChat(){
+  const inp=document.getElementById('chatIn');if(!inp?.value.trim())return;
+  const msg=inp.value.trim();inp.value='';appendMsg('user',msg);
+  const body=document.getElementById('chatBody');
+  const typing=document.createElement('div');typing.className='ch-msg ai';
+  typing.innerHTML='<div class="ch-typing"><div class="ch-dot"></div><div class="ch-dot"></div><div class="ch-dot"></div></div>';
+  body.appendChild(typing);body.scrollTop=body.scrollHeight;
+  let reply=null;
+  if(backendOnline){
+    try{const r=await fetch(API+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg}),signal:AbortSignal.timeout(5000)});if(r.ok){const d=await r.json();reply=d.reply||null}}catch{}
+  }
+  if(!reply)reply=getChatFallback(msg);
+  await new Promise(r=>setTimeout(r,400));
+  typing.remove();appendMsg('ai',reply);
+}
+function qChat(msg){document.getElementById('chatIn').value=msg;sendChat()}
+function openChat(){document.getElementById('chatPanel').classList.add('open');document.getElementById('chatOv').classList.add('open');setTimeout(()=>document.getElementById('chatIn')?.focus(),300)}
+function closeChat(){document.getElementById('chatPanel').classList.remove('open');document.getElementById('chatOv').classList.remove('open')}
+
+/* ── CLICK OUTSIDE ── */
+document.addEventListener('click',e=>{
+  const md=document.getElementById('mdrawer'),hb=document.getElementById('hbg');
+  if(md?.classList.contains('open')&&!md.contains(e.target)&&!hb?.contains(e.target))closeMobile();
+});
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  initTheme();
+  ['sHS','sAT','sGP','sTU','sSL','sST','sSC','sEA'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){const pct=((+el.value-+el.min)/(+el.max-+el.min))*100;el.style.setProperty('--pct',pct+'%')}
+  });
+  buildDashCharts();
+  buildSampleTable();
+  renderModelTables();
+  checkServer();
+  setInterval(()=>{if(!backendOnline)checkServer()},30000);
+});
+</script>
+</body>
+</html>
