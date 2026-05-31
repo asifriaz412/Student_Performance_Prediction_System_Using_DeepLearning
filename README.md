@@ -1,445 +1,547 @@
-# Student_Performance_Prediction_System_Using_DeepLearning
-📋 Table of Contents
-Overview
-Architecture
-Model Zoo
-Dataset
-Project Structure
-Quick Start
-Training Pipeline
-API Reference
-Results & Benchmarks
-Frontend
-Configuration
-Citation
-Author
+🎓 Student Academic Performance Prediction Using Deep Learning
+📌 Project Title
 
+Student Academic Performance Prediction Using Deep Learning and Behavioral Data Analysis
 
-🔍 Overview
-EduAI Predict is a multi-model student performance intelligence system developed as a Final Year Project. It combines the breadth of classical machine learning with the representational power of modern deep learning architectures to predict:
-Prediction Task Output Model sGrade Classification A / B / C / D / Fail 23 separate grade modelsRisk DetectionHigh / Medium / Low 23 separate risk modelsGPA Regression0.0 – 4.0 (continuous)Random Forest regressor
-Key Highlights
+📖 Brief Summary of the Project
 
-✅ 23 unique AI architectures trained in a single unified pipeline
-✅ Dual-model design — separate grade and risk models per architecture
-✅ Real-time REST API built with Flask, fully CORS-enabled
-✅ Interactive frontend — Student Panel, Teacher Dashboard, Explainability, What-If Analysis
-✅ Graceful fallback — analytic prediction engine active when no trained models are found
-✅ Client-side simulation in the frontend for offline use
-✅ Bulk prediction via CSV upload for Teacher dashboard
+This project develops a Deep  learning-based system to predict student academic performance using behavioral, demographic, and educational factors. The model analyzes student-related data to identify patterns that influence academic success and provides predictive insights that can assist educators in making informed decisions.
 
+🌟 Project Overview
 
-🏗 Architecture
-┌─────────────────────────────────────────────────────────────────────┐
-│                         FRONTEND  (Main.html)                       │
-│  ┌─────────────┐  ┌───────────────┐  ┌──────────┐  ┌───────────┐    │
-│  │ Student     │  │ Teacher       │  │ Model-pe │  │ Explain-  │    │
-│  │ Panel       │  │ Dashboard     │  │ rformance|  │ ability   │    │
-│  └──────┬──────┘  └───────┬───────┘  └────┬─────┘  └─────┬─────┘    │
-└─────────┼─────────────────┼───────────────┼──────────────┼────────_─┘
-          │     REST API    │               │              │
-          ▼  (localhost:8000)               ▼              ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                         BACKEND  (app.py / Flask)                   │
-│                                                                     │
-│   /predict/single ──► predict_single()                              │
-│   /predict/bulk   ──► predict_bulk()                                │
-│   /api/models/info──► MODEL_REGISTRY + metrics.json                 │
-│   /chat           ──► rule-based KB + optional LLM                  │
-│   /train          ──► retrain()                                     │
-│                                                                     │
-│   ┌──────────────────────────────────────────────────────────────┐  │
-│   │                  PREDICTION ENGINE                           │  │
-│   │  encode_row() → _apply_preprocessor() → model.predict()      │  │
-│   │           ↓ fallback if no model loaded                      │  │
-│   │         _analytic_predict_grade / _analytic_predict_risk()   │  │
-│   └──────────────────────────────────────────────────────────────┘  │
-│                                                                     │
-│   ┌────────────────────┐   ┌──────────────────────────────────────┐ │
-│   │  PREPROCESSORS     │   │  MODEL STORE  (46 models total)      │ │
-│   │  preprocessor.pkl  │   │  grade_*.pkl / grade_*.keras  ×23    │ │
-│   │  nn_preprocessor   │   │  risk_*.pkl  / risk_*.keras   ×23    │ │
-│   └────────────────────┘   └──────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────┘
+Educational institutions often face challenges in identifying students who may struggle academically. Early prediction of academic performance can help educators implement targeted interventions and support systems.
 
-🤖 Model Zoo
-Classical ML Models (8)
-#ModelKey HyperparametersGrade FileRisk File1Logistic RegressionC=1.0, solver=lbfgs, max_iter=3000grade_logistic_regression.pklrisk_logistic_regression.pkl2Random Forestn_estimators=500, max_features=sqrt, oob_score=Truegrade_random_forest.pklrisk_random_forest.pkl3Gradient Boostingn_estimators=300, lr=0.08, max_depth=5, subsample=0.85grade_gradient_boosting.pklrisk_gradient_boosting.pkl4XGBoostn_estimators=400, lr=0.07, max_depth=6, colsample=0.85grade_xgboost.pklrisk_xgboost.pkl5LightGBMn_estimators=500, lr=0.06, num_leaves=63grade_lightgbm.pklrisk_lightgbm.pkl6CatBoostiterations=500, lr=0.07, depth=6grade_catboost.pklrisk_catboost.pkl7Stacking EnsembleRF + GBT + XGB + LGB → LogReg, 5-fold CVgrade_stacking.pklrisk_stacking.pkl8TabNetn_d=32, n_a=32, n_steps=5, gamma=1.5grade_tabnet.pklrisk_tabnet.pkl
-Deep Learning Models (15)
-#ModelArchitecture HighlightsRisk File9Residual Neural NetworkSkip connections, BatchNorm, 3 residual blocksrisk_residual_nn.keras10FT-TransformerLinear tokenizer per feature → 2 transformer blocksrisk_tf_transformer.keras11BiLSTM + GRUBidirectional LSTM → GRU, input reshaped to (16,1)risk_bilstm.keras121D-CNN3× Conv1D + GlobalAvgPoolrisk_cnn1d.keras13Attention MLPSelf-gating attention (sigmoid-weighted multiply)risk_attention_mlp.keras14Autoencoder ClassifierEncoder → bottleneck → dual output (CLF + reconstruction)risk_autoencoder_clf.keras15VAE ClassifierReparameterisation trick + latent-space classifierrisk_vae_df.keras16Wide & DeepShallow wide path ∥ deep tower, concatenatedrisk_wide_and_deep.keras17Swish-SELU Deep MLPSwish/GELU activations, 4-layer deeprisk_swish_deep.keras18DenseNet MLPDense connections — all previous layers concatenatedrisk_densenet_mlp.keras19TabFormerBERT-style 3-block transformer with position embeddingsrisk_tabformer.keras20SAINTColumn-wise self-attention for tabular datarisk_saint.keras21Gated MLP (gMLP)Learned gating via sigmoid split on hidden unitsrisk_gated_mlp.keras22NODE ApproximationOblivious decision tree simulation via softmax splitsrisk_node_approx.keras23Capsule NetworkPrimary capsules → digit capsules with squash activationrisk_capsule_net.keras
+This project utilizes Deep learning techniques to analyze student behavior and academic records, enabling the prediction of future academic outcomes. A user-friendly web interface is developed to allow users to input student information and obtain performance predictions.
 
-Dual-model design: Every architecture trains a separate model for grade prediction AND risk detection, giving 46 total trained model files.
+❗ Problem Statement
 
+Many students experience academic difficulties due to various factors such as attendance, study habits, participation, and personal circumstances. Traditional evaluation methods may not identify at-risk students early enough.
 
+The objective of this project is to:
+
+Predict student academic performance using machine/Deep learning algorithms.
+Identify key factors affecting academic success.
+Provide data-driven insights to educators and institutions.
+Support early intervention strategies for improving student outcomes.
 📊 Dataset
-PropertyValueTotal Records50,000 studentsTrain / Test Split80% / 20% (stratified)Random State42 (reproducible)Missing ValuesImputed with column mode/meanClass BalancingDerived risk labels; SMOTE optional
-Input Features (16)
-Numeric (9):
-  Age · Hours_Studied · Attendance · Sleep_Hours · Stress_Level
-  Screen_Time · Previous_GPA · Tutoring_Sessions_Per_Week · Exam_Anxiety_Score
 
-Categorical (7):
-  Gender            →  Male | Female | Non-Binary
-  Part_Time_Job     →  Yes | No
-  Study_Method      →  Offline | Online | Hybrid
-  Diet_Quality      →  Poor | Average | Good
-  Internet_Quality  →  Poor | Average | Good | Excellent
-  Extracurricular   →  Yes | No
-  Family_Income_Level → Low | Middle | High
-Target Variables
-Grade  →  A (4) · B (3) · C (2) · D (1) · Fail (0)   [multi-class]
-Risk   →  High (2) · Medium (1) · Low (0)              [multi-class]
-GPA    →  0.0 – 4.0                                    [regression, derived]
-Feature Importance (Random Forest — Gini)
-Previous GPA              ████████████████████░  21.8%
-Hours Studied             ████████████████░░░░░  18.4%
-Attendance                ████████████░░░░░░░░░  14.3%
-Exam Anxiety Score        █████████░░░░░░░░░░░░  10.2%
-Stress Level              ████████░░░░░░░░░░░░░   8.8%
-Tutoring Sessions/Week    ██████░░░░░░░░░░░░░░░   7.1%
-Sleep Hours               █████░░░░░░░░░░░░░░░░   6.3%
-Screen Time               ████░░░░░░░░░░░░░░░░░   4.9%
-Age                       ███░░░░░░░░░░░░░░░░░░   3.1%
-Family Income Level       ██░░░░░░░░░░░░░░░░░░░   2.0%
-Gender                    █░░░░░░░░░░░░░░░░░░░░   1.3%
-Part-Time Job             █░░░░░░░░░░░░░░░░░░░░   1.0%
-Diet Quality              ░░░░░░░░░░░░░░░░░░░░░   0.6%
-Extracurricular           ░░░░░░░░░░░░░░░░░░░░░   0.4%
-Internet Quality          ░░░░░░░░░░░░░░░░░░░░░   0.4%
-Study Method              ░░░░░░░░░░░░░░░░░░░░░   0.3%
+The project uses the Student Academic Behavior Dataset, which contains information related to:
 
-📁 Project Structure
-EduAI-Predict/
-│
-├── app.py                          # Flask backend — prediction engine + API
-├── train_all_models.py             # Full training pipeline — all 23 models
-├── requirements.txt                # Runtime dependencies
-├── requirements_train.txt          # Training-only dependencies
-├── index.html                      # Frontend SPA (single file, no build step)
-│
-├── data/
-│   └── student_academic_behavior_dataset.csv
-│   
-│
-└── models/                         # Auto-created on first train
-    │
-    ├── preprocessor.pkl            # RobustScaler for .pkl models
-    ├── nn_preprocessor.pkl         # StandardScaler for .keras models
-    ├── grade_encoder.pkl           # LabelEncoder — grades
-    ├── risk_encoder.pkl            # LabelEncoder — risk levels
-    │
-    ├── metrics.json                # Accuracy / F1 / Precision / Recall — all 23
-    ├── feature_importance.json     # Gini importance from RF
-    ├── sample_students.json        # 120 sample records for Teacher dashboard
-    │
-    ├── grade_logistic_regression.pkl
-    ├── grade_random_forest.pkl
-    ├── grade_gradient_boosting.pkl
-    ├── grade_xgboost.pkl
-    ├── grade_lightgbm.pkl
-    ├── grade_catboost.pkl
-    ├── grade_stacking.pkl
-    ├── grade_tabnet.pkl
-    ├── grade_residual_nn.keras
-    ├── grade_ft_transformer.keras
-    ├── grade_bilstm.keras
-    │
-    ├── risk_logistic_regression.pkl
-    ├── risk_random_forest.pkl
-    ├── risk_gradient_boosting.pkl
-    ├── risk_xgboost.pkl
-    ├── risk_lightgbm.pkl
-    ├── risk_catboost.pkl
-    ├── risk_stacking.pkl
-    ├── risk_tabnet.pkl
-    ├── risk_residual_nn.keras
-    ├── risk_tf_transformer.keras
-    ├── risk_bilstm.keras
-    ├── risk_cnn1d.keras
-    ├── risk_attention_mlp.keras
-    ├── risk_autoencoder_clf.keras
-    ├── risk_vae_df.keras
-    ├── risk_wide_and_deep.keras
-    ├── risk_swish_deep.keras
-    ├── risk_densenet_mlp.keras
-    ├── risk_tabformer.keras
-    ├── risk_saint.keras
-    ├── risk_gated_mlp.keras
-    ├── risk_node_approx.keras
-    └── risk_capsule_net.keras
-
-🚀 Quick Start
-Prerequisites
-
-Python 3.10+
-pip or conda
-(Optional) CUDA-capable GPU for faster DL training
-
-1 — Clone the repository
-bashgit clone https://github.com/<your-username>/EduAI-Predict.git
-cd EduAI-Predict
-2 — Install runtime dependencies
-bashpip install -r requirements.txt
-3 — Place your dataset
-data/student_performance_grade.xlsx        ← preferred
-data/student_academic_behavior_dataset.csv ← alternative
-4 — Train all 23 models
-bash# Full training — ML + Deep Learning
-python train_all_models.py
-
-# Classical ML only (fast, ~10 min on CPU)
-python train_all_models.py --skip-dl
-
-# Custom epochs and batch size
-python train_all_models.py --epochs 100 --batch 512
-
-# Point to a custom dataset
-python train_all_models.py --data /path/to/your/dataset.csv
-5 — Start the backend server
-bashpython app.py
-# → http://localhost:8000
-6 — Open the frontend
-Open index.html in any modern browser.
-The status pill in the top-right will turn green when the backend is connected.
-
-No backend? The frontend runs in full client-side simulation mode — all 23 model predictions are approximated using the JavaScript scoring engine.
+Academic factors
 
 
-🛠 Training Pipeline
-The train_all_models.py script handles the complete pipeline in 5 steps:
-Step 1 — Load Dataset        → auto-discover CSV / XLSX, normalise column names
-Step 2 — Fit Preprocessors   → RobustScaler (pkl) + StandardScaler (nn) + LabelEncoders
-Step 3 — Train ML Models     → 8 classical models, grade + risk each
-Step 4 — Train DL Models     → 15 deep learning models, grade + risk each
-Step 5 — Save Artefacts      → metrics.json, feature_importance.json, sample_students.json
-Training CLI Options
-usage: python train_all_models.py [OPTIONS]
+Attendance records
+Study hours
+previous gpa
+Tutoring Sessions / Week
 
-options:
-  --data PATH      Path to dataset CSV or XLSX (auto-discovers if omitted)
-  --skip-dl        Skip all 15 Deep Learning models
-  --skip-ml        Skip all 8 Classical ML models
-  --epochs N       Epochs for DL training           (default: 60)
-  --batch  N       Batch size for DL training        (default: 256)
-  -h, --help       Show this message and exit
-Estimated Training Times
-HardwareML OnlyDL OnlyAll 23 ModelsCPU (8-core)~10 min~90 min~100 minGPU RTX 3060~5 min~15 min~20 minGPU A100~3 min~5 min~8 min
-Based on 50,000 records, 60 DL epochs, batch size 256.
+wellbeing fectors 
 
-📡 API Reference
-Base URL: http://localhost:8000
-GET /health
-Returns backend status, loaded model counts, and best model accuracy.
-json{
-  "status": "ok",
-  "grade_models_loaded": 11,
-  "risk_models_loaded": 23,
-  "total_architectures": 23,
-  "best_model": "saint",
-  "best_accuracy": 0.9130,
-  "analytic_mode": false
-}
+Sleep Hours / Night
+Stress Level
+Screen Time / Day
+Exam Anxiety 
 
-GET /api/models/info
-Returns metrics and metadata for all 23 models.
-json{
-  "metrics": {
-    "random_forest": {
-      "accuracy": 0.8940, "f1": 0.8901, "precision": 0.8920, "recall": 0.8940,
-      "name": "Random Forest", "icon": "🌲", "grade_loaded": true, "risk_loaded": true
-    }
-  },
-  "feature_importance": { "Previous_GPA": 0.2180, "Hours_Studied": 0.1842, "..." : "..." },
-  "best_model": "saint"
-}
+Demographic factors 
 
-POST /predict/single
-Predict grade, risk, and GPA for a single student.
-Request body:
-json{
-  "model": "random_forest",
-  "Age": 20,
-  "Hours_Studied": 7.5,
-  "Attendance": 88,
-  "Sleep_Hours": 7,
-  "Stress_Level": 3,
-  "Screen_Time": 2,
-  "Previous_GPA": 3.2,
-  "Tutoring_Sessions_Per_Week": 3,
-  "Exam_Anxiety_Score": 4,
-  "Gender": "Female",
-  "Part_Time_Job": "No",
-  "Study_Method": "Hybrid",
-  "Diet_Quality": "Good",
-  "Internet_Quality": "Good",
-  "Extracurricular": "Yes",
-  "Family_Income_Level": "Middle"
-}
-Response:
-json{
-  "predicted_grade": "A",
-  "predicted_score": 91.4,
-  "estimated_gpa": 3.72,
-  "risk_level": "Low",
-  "confidence": 84.6,
-  "probability": { "Fail": 0.4, "D": 1.1, "C": 7.2, "B": 18.5, "A": 72.8 },
-  "all_model_preds": { "random_forest": "A", "saint": "A", "bilstm": "B", "..." : "..." },
-  "suggestions": [
-    { "icon": "✅", "severity": "low", "text": "Excellent profile — keep it up!" }
-  ],
-  "feature_importance": { "Previous_GPA": 0.2180, "..." : "..." },
-  "model_used": "random_forest",
-  "risk_model_used": "random_forest",
-  "confidence": 84.6,
-  "from_backend": true,
-  "analytic_mode": false
-}
+gender 
+age
+part-time job
+study method
+diet quality 
+internet quality
+Extracurricular
+family income
 
-POST /predict/bulk
-Upload a CSV of students — returns batch predictions.
-bashcurl -X POST http://localhost:8000/predict/bulk \
-  -F "file=@students.csv"
-Response:
-json{
-  "count": 150,
-  "predictions": [
-    { "student_id": "STU001", "predicted_grade": "B", "risk_level": "Medium", "..." : "..." }
-  ]
-}
+📊 Dataset Feature Descriptions
 
-GET /students
-Returns sample student records with live predictions.
-GET /students?limit=50
+🎓 Academic Factors
 
-GET /students/at-risk
-Returns only students predicted as High risk.
+Factor	                    Description
+Attendance Records    	Measures the percentage of classes attended by a student. Higher attendance generally reflects                               greater engagement and is often associated with improved academic performance.
+Study Hours         	Represents the average number of hours a student spends studying per day or week. Consistent                                 study habits typically contribute to better learning outcomes.
+Previous GPA	          Indicates the student's cumulative Grade Point Average from prior academic periods. It serves                                as a strong predictor of future academic achievement.
+Tutoring Sessions per Week    Refers to the number of tutoring or academic support sessions attended weekly. Additional                                    academic assistance may improve understanding and performance.
+🧠 Well-Being Factors
 
-GET /students/stats
-Returns grade and risk distribution across sample records.
+Factor	                    Description
+Sleep Hours per Night	Represents the average number of hours a student sleeps each night. Adequate sleep supports                                  concentration, memory retention, and overall academic performance.
+Stress Level        	Measures the level of academic or personal stress experienced by a student, typically                                        categorized as low, medium, or high. Excessive stress may negatively impact learning and                                     performance.
+Screen Time per Day	          Indicates the average number of hours spent using electronic devices such as smartphones,                                    computers, or tablets. Excessive screen time may affect study habits and sleep quality.
+Exam Anxiety        	Reflects the degree of nervousness or anxiety a student experiences before or during                                         examinations. High anxiety levels can affect academic outcomes and test performance.
+👥 Demographic and Lifestyle Factors
 
-POST /chat
-Simple rule-based academic advisor chatbot.
-json{ "message": "How can I improve my grade?" }
-json{ "reply": "📚 Top strategies:\n1. Study 5–7h/day using Pomodoro..." }
+Factor	                    Description
+Gender	                    Represents the student's gender. This variable is included for analytical purposes to examine                                potential differences in academic outcomes across groups.
+Age	                    Indicates the student's age in years. Age may influence learning styles, maturity, and                                       academic behavior.
+Part-Time Job       	Specifies whether the student is employed while studying. Balancing work and academic                                        responsibilities can impact study time and performance.
+Study Method	          Describes the student's preferred learning approach, such as self-study, group study, online                                 learning, or tutoring-based learning. Different methods may affect academic success.
+Diet Quality	          Measures the overall nutritional quality of the student's diet. Healthy eating habits can                                    support cognitive function, energy levels, and academic performance.
+Internet Quality	          Represents the reliability and speed of internet access available to the student. Good                                       internet connectivity is particularly important for online learning and research activities.
+Extracurricular Activities    Indicates participation in sports, clubs, volunteer work, or other non-academic activities.                                  Such activities may contribute to personal development, time management, and social skills.
+Family Income	          Represents the socioeconomic status of the student's household. Financial resources may                                      influence access to educational materials, learning opportunities, and support systems.
+🛠️ Tools and Technologies
 
-POST /train
-Trigger retraining of base sklearn models from the dataset on disk.
+Programming Language
 
-📈 Results & Benchmarks
-Risk Classification (Binary: At Risk / Not At Risk)
-RankModelTypeAccuracyF1 ScoreAUC-ROC🥇 1SAINTDL91.30%91.04%95.30%🥈 2FT-TransformerDL91.50%91.23%95.40%🥉 3TabFormerDL91.20%90.92%95.20%4Stacking EnsembleML91.00%90.72%95.00%5CatBoostML90.60%90.28%94.60%6LightGBMML90.20%89.86%94.20%7XGBoostML89.80%89.45%93.80%8Gated MLPDL89.60%89.27%93.60%9Random ForestML89.40%89.01%93.40%10Attention MLPDL89.20%88.87%93.10%
-Grade Classification (Multi-class: A / B / C / D / Fail)
-RankModelAccuracyF1 Score🥇 1SAINT89.30%89.04%🥈 2FT-Transformer89.50%89.23%🥉 3TabFormer89.20%88.92%4Stacking Ensemble89.00%88.72%5CatBoost88.60%88.28%6Logistic Regression78.69%78.30%
-GPA Regression (R² Score)
-RankModelR²RMSEMAE🥇 1Stacking Ensemble0.91000.21500.1670🥈 2SAINT0.91300.21200.1645🥉 3FT-Transformer0.91500.21000.16304LightGBM0.90200.22500.17505Random Forest0.89400.23400.1820
+Python
 
-🎨 Frontend
-The frontend is a single-file, zero-dependency SPA (index.html) with no build step required.
-Pages
-PageDescriptionDashboardOverview stats, grade/risk charts, sample student tableStudent Panel16-feature input form, model selector (ML + DL), full result displayTeacher DashboardBulk CSV upload, class analytics, at-risk alertsModel PerformanceMetrics tables for all 23 models — risk, grade, GPAExplainabilityFeature importance waterfall, global bar chart, What-If analysisHistoryBrowser-local prediction history with CSV exportAI ChatRule-based academic advisor chatbot
-Offline Mode
-When the backend is unreachable the frontend automatically switches to client-side simulation — a JavaScript scoring engine that mirrors the Random Forest logic using the same feature importance weights. All 23 model predictions are approximated client-side.
-Technology Stack
-HTML5 / CSS3 / Vanilla JavaScript (ES2022)
-Chart.js 4.4  — all charts
-Bootstrap Icons 1.11 — icon set
-Google Fonts — Outfit, JetBrains Mono, Playfair Display
-No build step. No npm. No webpack. Just open index.html.
+Libraries
 
-⚙️ Configuration
-Backend (app.py)
-python# Feature list — must match your dataset column names exactly
-FEATURES = ['Age', 'Hours_Studied', 'Attendance', ...]
+Pandas
+NumPy
+Scikit-learn
+Matplotlib
+Seaborn
+Joblib/Pickle
 
-# Grade mapping
-GRADE_MAP = {'Fail': 0, 'D': 1, 'C': 2, 'B': 3, 'A': 4}
+Web Development
 
-# Risk mapping
-RISK_MAP = {'Low': 0, 'Medium': 1, 'High': 2}
+HTML
+CSS
+Flask
 
-# Model and data directories
-MODEL_DIR = BASE_DIR / "models"
-DATA_DIR  = BASE_DIR / "data"
-Server Options
-bashpython app.py --host 0.0.0.0 --port 8000 --debug
-Training Options
-bashpython train_all_models.py \
-  --data data/my_dataset.csv \
-  --epochs 100 \
-  --batch 256 \
-  --skip-dl       # classical ML only
+Development Environment
 
-📦 Dependencies
-Runtime (requirements.txt)
-flask>=3.0
-flask-cors>=4.0
-numpy>=1.24
-pandas>=2.0
-scikit-learn>=1.3
-joblib>=1.3
-tensorflow>=2.13
-openpyxl>=3.1
-Training (requirements_train.txt)
-# + all runtime deps above
-xgboost>=2.0
-lightgbm>=4.0
-catboost>=1.2
-pytorch-tabnet>=4.1
-torch>=2.0
-imbalanced-learn>=0.11
+VS Code
+Jupyter Notebook
+Version Control
+Git
+GitHub
 
 🔬 Methodology
-1. Data Collection    →  50,000 synthetic/real student records, 16 features
-2. EDA               →  Distribution analysis, correlation matrices, outlier detection
-3. Preprocessing     →  Label encoding (categorical), RobustScaler (ML), StandardScaler (DL)
-4. Train/Test Split  →  80/20 stratified split, random_state=42
-5. Model Training    →  8 ML + 15 DL architectures, EarlyStopping for DL
-6. Evaluation        →  Accuracy, F1 (weighted), Precision, Recall, AUC-ROC
-7. Deployment        →  Flask REST API + single-file HTML frontend
-8. Explainability    →  Gini feature importance (RF), per-prediction waterfall chart
 
-📝 Citation
-If you use this work in academic research, please cite:
-bibtex@misc{riaz2024eduai,
-  author       = {Muhammad Asif Riaz},
-  title        = {EduAI Predict: A Multi-Model Student Academic Performance
-                  Intelligence System},
-  year         = {2024},
-  institution  = {Islamia University of Bahawalpur},
-  note         = {Final Year Project — F22BDATS1M02032},
-  howpublished = {\url{https://github.com/<your-username>/EduAI-Predict}}
-}
+1. Data Collection
+Load student academic behavior dataset.
+2. Data Preprocessing
+Handle missing values.
+Remove duplicates.
+Feature selection and transformation.
+Data normalization/encoding.
+3. Exploratory Data Analysis (EDA)
+Analyze student behavior trends.
+Visualize feature relationships.
+Identify significant predictors.
+4. Model Training
 
-👤 Author
-<div align="center">
-<img src="https://github.com/identicons/<your-username>.png" width="100" style="border-radius:50%"/>
+The machine learning model is trained using:
+
+🤖 Machine Learning Models Used
+🌲 Random Forest
+
+Description:
+Random Forest is an ensemble learning algorithm that combines multiple decision trees to make predictions. Each tree is trained on a random subset of the data, and the final prediction is determined by majority voting (classification) or averaging (regression).
+
+Advantages:
+
+High accuracy
+Handles large datasets effectively
+Reduces overfitting compared to a single decision tree
+Provides feature importance analysis
+
+Use in Project:
+Used to predict student GPA, grade, and risk level based on academic, well-being, and demographic factors.
+
+📈 Logistic Regression
+
+Description:
+Logistic Regression is a supervised learning algorithm used for classification problems. It estimates the probability that an observation belongs to a particular class.
+
+Advantages:
+
+Simple and interpretable
+Fast training and prediction
+Works well for binary classification problems
+
+Use in Project:
+Used for predicting student risk categories such as High Risk or Low Risk.
+
+🔥 Gradient Boosting
+
+Description:
+Gradient Boosting is an ensemble technique that builds models sequentially, where each new model corrects the errors of the previous one. It combines multiple weak learners to create a strong predictive model.
+
+Advantages:
+
+High predictive performance
+Handles complex relationships in data
+Effective for both classification and regression tasks
+
+Use in Project:
+Used to improve prediction accuracy for GPA and grade prediction.
+
+⚡ XGBoost (Extreme Gradient Boosting)
+
+Description:
+XGBoost is an optimized implementation of Gradient Boosting that provides faster training, better performance, and built-in regularization to prevent overfitting.
+
+Advantages:
+
+High accuracy
+Fast computation
+Handles missing values efficiently
+Widely used in machine learning competitions
+
+Use in Project:
+Applied to achieve accurate student performance and risk predictions.
+
+💡 LightGBM (Light Gradient Boosting Machine)
+
+Description:
+LightGBM is a gradient boosting framework developed by Microsoft. It uses a leaf-wise tree growth strategy that improves efficiency and speed.
+
+Advantages:
+
+Faster training on large datasets
+Lower memory consumption
+High prediction accuracy
+
+Use in Project:
+Used for efficient prediction of academic performance when working with larger datasets.
+
+🐱 CatBoost
+
+Description:
+CatBoost is a gradient boosting algorithm developed by Yandex that handles categorical variables effectively without extensive preprocessing.
+
+Advantages:
+
+Excellent handling of categorical data
+Minimal feature engineering required
+Reduces overfitting
+
+Use in Project:
+Suitable for datasets containing categorical features such as gender, study method, and internet quality.
+
+🏗️ Stacking Ensemble
+
+Description:
+Stacking Ensemble combines multiple machine learning models and uses a meta-model to generate the final prediction. It leverages the strengths of different algorithms to improve overall performance.
+
+Advantages:
+
+Higher predictive accuracy
+Reduces weaknesses of individual models
+Produces more robust predictions
+
+Use in Project:
+Used as the final model to combine predictions from Random Forest, XGBoost, LightGBM, and CatBoost for enhanced GPA, grade, and risk prediction.
+
+📊 TabNet
+
+Description:
+TabNet is a deep learning architecture specifically designed for tabular data. It uses attention mechanisms to select the most relevant features during training.
+
+Advantages:
+
+Designed specifically for structured/tabular datasets
+Provides feature interpretability
+Learns complex feature relationships
+
+Use in Project:
+Explored as an advanced deep learning approach for student academic performance prediction.
+
+The deep learning model is trained using:
+🧠 Deep Learning Models Evaluated
+🔗 Residual Neural Network (ResNet-style)
+
+Description:
+A deep neural network that uses skip connections (residual connections) to pass information directly between layers. This helps prevent the vanishing gradient problem and allows deeper networks to learn effectively.
+
+Use Case:
+Suitable for complex tabular datasets where deeper architectures may capture hidden relationships among student factors.
+
+🎯 Attention MLP (Self-Gate)
+
+Description:
+A Multi-Layer Perceptron (MLP) enhanced with an attention mechanism that automatically focuses on the most important features during prediction.
+
+Use Case:
+Useful for identifying which student attributes (attendance, GPA, stress level, etc.) contribute most to academic performance.
+
+🌐 Wide & Deep Network
+
+Description:
+Combines a linear model (Wide component) with a deep neural network (Deep component). The wide part memorizes patterns while the deep part generalizes to unseen combinations.
+
+Use Case:
+Effective for capturing both simple and complex relationships in educational datasets.
+
+⚡ Swish-SELU Deep MLP
+
+Description:
+A deep feed-forward neural network that uses Swish and SELU activation functions to improve learning efficiency and model stability.
+
+Use Case:
+Suitable for predicting GPA and grades from multiple student-related features.
+
+🕸️ DenseNet MLP
+
+Description:
+Inspired by DenseNet architecture, where each layer receives information from all previous layers. This improves feature reuse and information flow.
+
+Use Case:
+Helps capture interactions among academic, demographic, and well-being factors.
+
+🤖 Transformer-Based Models
+🎭 FT-Transformer
+
+Description:
+A transformer architecture specifically designed for tabular data. It uses attention mechanisms to learn relationships between different features.
+
+Advantages:
+
+State-of-the-art performance on tabular datasets
+Learns complex feature interactions
+High prediction accuracy
+
+Use Case:
+Student performance prediction using structured educational data.
+
+🤖 TabFormer (BERT-Style)
+
+Description:
+A transformer model inspired by BERT that processes tabular data similarly to how BERT processes text. It learns contextual relationships among features.
+
+Advantages:
+
+Captures complex dependencies
+Strong performance on structured data
+Learns feature importance automatically
+
+Use Case:
+Predicting GPA, grades, and student risk levels.
+
+✨ SAINT (Self-Attention and Intersample Attention Transformer)
+
+Description:
+An advanced transformer architecture designed specifically for tabular datasets. It applies attention both within features and across samples.
+
+Advantages:
+
+Excellent performance on classification tasks
+Robust feature learning
+Effective on mixed categorical and numerical data
+
+Use Case:
+Student academic risk classification.
+
+🚪 Gated MLP (gMLP)
+
+Description:
+A neural network architecture that replaces traditional attention mechanisms with gating operations, reducing computational complexity.
+
+Advantages:
+
+Faster training
+Lower computational cost
+Competitive performance
+
+Use Case:
+Efficient prediction of academic outcomes.
+
+🔄 Sequence and Convolution Models
+🔁 BiLSTM + GRU
+
+Description:
+Combines Bidirectional Long Short-Term Memory (BiLSTM) and Gated Recurrent Unit (GRU) networks to learn sequential patterns.
+
+Advantages:
+
+Captures long-term dependencies
+Effective for time-series and sequential data
+
+Use Case:
+Useful if student performance data is collected over multiple semesters.
+
+📡 1D Convolutional Neural Network (1D-CNN)
+
+Description:
+A convolutional neural network that applies filters along one-dimensional data to identify local patterns and feature combinations.
+
+Advantages:
+
+Fast training
+Effective feature extraction
+
+Use Case:
+Learning patterns from student attributes and behavioral indicators.
+
+🎨 Generative and Specialized Models
+🔐 Autoencoder + Classifier
+
+Description:
+An autoencoder first compresses the data into meaningful representations, then a classifier uses these representations for prediction.
+
+Advantages:
+
+Reduces noise
+Improves feature extraction
+Useful for dimensionality reduction
+
+Use Case:
+Student grade and risk prediction.
+
+🌌 Variational Autoencoder (VAE) Classifier
+
+Description:
+A probabilistic version of an autoencoder that learns latent representations and performs classification.
+
+Advantages:
+
+Handles uncertainty well
+Learns robust feature representations
+
+Use Case:
+Academic performance classification with complex datasets.
+
+🌳 NODE (Neural Oblivious Decision Ensembles)
+
+Description:
+A neural network architecture inspired by decision trees that is specifically optimized for tabular data.
+
+Advantages:
+
+Strong performance on structured datasets
+Combines tree-based and deep learning benefits
+
+Use Case:
+Student GPA and risk prediction.
+
+💊 Capsule Network (CapsuleNet)
+
+Description:
+A neural network architecture that groups neurons into capsules to preserve hierarchical relationships among features.
+
+Advantages:
+
+Captures complex relationships
+Better feature representation
+
+Use Case:
+Advanced educational data modeling and classification.
+
+5. Model Evaluation
+
+Evaluation metrics include:
+
+Accuracy
+Precision
+Recall
+F1-Score
+Confusion Matrix
+6. Deployment
+Flask web application for user interaction.
+Prediction results displayed through a web interface.
+
+📈 Key Insights
+
+The analysis revealed several factors strongly associated with academic performance:
+
+Higher attendance leads to better academic outcomes.
+Increased study hours positively impact performance.
+Assignment completion significantly influences final grades.
+Student engagement and participation contribute to academic success.
+Historical academic records are strong predictors of future performance.
+📊 Dashboard / Model Output
+
+The system provides:
+
+Input
+
+Users enter student-related information such as:
+
+📥 Input Features
+
+🎓 Academic Factors
+
+Attendance Records
+Study Hours
+Previous GPA
+Tutoring Sessions per Week
+
+🧠 Well-Being Factors
+
+Sleep Hours per Night
+Stress Level
+Screen Time per Day
+Exam Anxiety
+
+👥 Demographic & Lifestyle Factors
+
+Gender
+Age
+Part-Time Job
+Study Method
+Diet Quality
+Internet Quality
+Extracurricular Activities
+Family Income
+
+Output
+
+The model predicts:
+
+🎯 Target Variables
+
+The machine learning model is designed to predict a student's academic outcome and risk level based on academic, well-being, and demographic factors.
+
+Target Variable	Description
+Predicted GPA	Estimates the student's expected Grade Point Average (GPA) based on the input features. This provides a                      numerical measure of academic performance.
+Predicted Grade	Predicts the student's likely academic grade category (e.g., A, B, C, D, F) based on their behavioral                        and academic characteristics.
+Risk Level	Classifies students into risk categories to identify those who may require academic support or                               intervention.
+
+Example Output:
+
+Prediction Result:
+<img width="959" height="377" alt="image" src="https://github.com/user-attachments/assets/53f2882b-1fc8-41b1-a7a2-d47ed48557ac" />
+
+
+Confidence Score: 92%
+🚀 How to Run This Project
+Step 1: Clone Repository
+git clone https://github.com/your-username/student-academic-performance-prediction.git
+Step 2: Navigate to Project Directory
+cd student-academic-performance-prediction
+Step 3: Install Dependencies
+pip install -r requirements.txt
+Step 4: Train Model
+python train.py
+Step 5: Run Application
+python app.py
+Step 6: Open Browser
+http://127.0.0.1:5000
+📋 Results and Conclusions
+
+The machine/Deep learning model successfully predicts student academic performance with satisfactory accuracy.
+
+Results
+High prediction accuracy achieved.
+Important academic success factors identified.
+User-friendly prediction interface developed.
+Conclusion
+
+The project demonstrates how machine learning can support educational institutions in identifying at-risk students and improving academic outcomes through timely intervention and data-driven decision-making.
+
+🔮 Future Work
+
+Potential enhancements include:
+
+Integration with real-time educational databases.
+Deployment on cloud platforms.
+Mobile application development.
+Deep Learning implementation.
+Student recommendation system.
+Real-time performance monitoring dashboard.
+Explainable AI (XAI) for prediction interpretation.
+👨‍💻 Author
+
 Muhammad Asif Riaz
-Roll No: F22BDATS1M02032
-Department of Computer Science
-Islamia University of Bahawalpur, Pakistan
-Show Image
-Show Image
-Show Image
-</div>
+Final Year Project
+Department of Data Science
 
-📄 License
+📜 License
+
+This project is developed for academic and educational purposes.
+
 MIT License
-
-Copyright (c) 2024 Muhammad Asif Riaz
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-
-⭐ Star this repository if it helped your research!
-Built with ❤️ at Islamia University of Bahawalpur
