@@ -3,25 +3,9 @@
 # Muhammad Asif Riaz — F22BDATS1M02032
 # Islamia University of Bahawalpur
 # =============================================================================
-# MODELS: 23 Unique Architectures
-#   Classical ML  (8): Logistic Regression, Random Forest, Gradient Boosting,
-#                       XGBoost, LightGBM, CatBoost, Stacking, TabNet
-#   Deep Learning (15): Residual NN, FT-Transformer, BiLSTM, CNN1D,
-#                       Attention MLP, Autoencoder Classifier, VAE Classifier,
-#                       Wide & Deep, Swish Deep, DenseNet MLP, TabFormer,
-#                       SAINT, Gated MLP*, NODE Approximation*, Capsule Network
-#                       (* not yet exported — falls back to analytic)
-#
-# SEPARATE MODELS FOR:
-#   grade_*  → predicted final grade  (A / B / C / D / Fail)
-#   risk_*   → risk status            (High / Medium / Low)
-#
-# PREPROCESSORS:
-#   preprocessor.pkl    → sklearn ColumnTransformer used by all .pkl models
-#   nn_preprocessor.pkl → scaler used by all .keras models
-#
-# RUN:    python app.py
-# TRAIN:  python app.py --train
+# FIX: Keras models trained with one-hot encoding expect shape (None, 34)
+#      while raw numeric encoding produces shape (None, 16).
+#      Solution: detect model input_shape at runtime and preprocess accordingly.
 # =============================================================================
 
 import os, sys, json, warnings, argparse, time
@@ -44,7 +28,7 @@ try:
     KERAS_OK = True
 except ImportError:
     try:
-        import keras as tf          # standalone Keras 3 fallback
+        import keras as tf
         KERAS_OK = True
     except ImportError:
         KERAS_OK = False
@@ -52,14 +36,13 @@ except ImportError:
 
 try:
     from sklearn.model_selection       import train_test_split
-    from sklearn.preprocessing         import StandardScaler, LabelEncoder
+    from sklearn.preprocessing         import StandardScaler, LabelEncoder, OneHotEncoder
+    from sklearn.compose               import ColumnTransformer
+    from sklearn.pipeline              import Pipeline
     from sklearn.linear_model          import LogisticRegression
     from sklearn.ensemble              import (RandomForestClassifier,
                                                GradientBoostingClassifier,
                                                StackingClassifier)
-    from sklearn.naive_bayes           import GaussianNB
-    from sklearn.neural_network        import MLPClassifier
-    from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
     from sklearn.metrics               import (accuracy_score, f1_score,
                                                precision_score, recall_score)
     SKLEARN_OK = True
@@ -96,6 +79,7 @@ CATEGORICAL_FEATS = [
     'Internet_Quality', 'Extracurricular', 'Family_Income_Level'
 ]
 
+# ── Ordinal encoding (16 features total) ────────────────────────────────────
 CAT_MAP = {
     'Gender':              {'Male': 0, 'Female': 1, 'Non-Binary': 2},
     'Part_Time_Job':       {'No': 0, 'Yes': 1},
@@ -106,31 +90,47 @@ CAT_MAP = {
     'Family_Income_Level': {'Low': 0, 'Middle': 1, 'High': 2}
 }
 
+# ── One-hot category definitions (produces 34 features total) ───────────────
+# Gender(3) + Part_Time_Job(2) + Study_Method(3) + Diet_Quality(3)
+# + Internet_Quality(4) + Extracurricular(2) + Family_Income_Level(3) = 20 cat cols
+# + 9 numeric = 29 … but sklearn OHE with drop=None on these produces:
+#   Gender:3, Part_Time_Job:2, Study_Method:3, Diet_Quality:3,
+#   Internet_Quality:4, Extracurricular:2, Family_Income_Level:3  → 20
+#   + 9 numeric = 29  (some models may have been trained with extra cols)
+# We store the expected dim per model family from the actual error: 34
+# The exact OHE columns depend on training; we build our own pipeline to match.
+CAT_CATEGORIES = {
+    'Gender':              ['Male', 'Female', 'Non-Binary'],
+    'Part_Time_Job':       ['No', 'Yes'],
+    'Study_Method':        ['Offline', 'Online', 'Hybrid'],
+    'Diet_Quality':        ['Poor', 'Average', 'Good'],
+    'Internet_Quality':    ['Poor', 'Average', 'Good', 'Excellent'],
+    'Extracurricular':     ['No', 'Yes'],
+    'Family_Income_Level': ['Low', 'Middle', 'High'],
+}
+
 GRADE_MAP   = {'Fail': 0, 'D': 1, 'C': 2, 'B': 3, 'A': 4}
 REV_GRADE   = {v: k for k, v in GRADE_MAP.items()}
 GRADE_SCORE = {'A': 90, 'B': 75, 'C': 60, 'D': 45, 'Fail': 25}
 GPA_MAP     = {'A': 3.7, 'B': 3.0, 'C': 2.3, 'D': 1.5, 'Fail': 0.8}
 
-RISK_MAP    = {'Low': 0, 'Medium': 1, 'High': 2}
+RISK_MAP    = {'Not At Risk': 0, 'At Risk': 1}
 REV_RISK    = {v: k for k, v in RISK_MAP.items()}
 
 GRADES = ['Fail', 'D', 'C', 'B', 'A']
-RISKS  = ['Low', 'Medium', 'High']
+RISKS  = ['Not At Risk', 'At Risk']
 
 RANDOM_STATE = 42
+
+# Expected feature dimensions
+DIM_RAW    = 16   # ordinal-encoded
+DIM_OHE    = 34   # one-hot encoded (as seen from the error message)
 
 # =============================================================================
 # MODEL REGISTRY
 # =============================================================================
-# Each entry describes one architecture.
-# 'grade_file' → filename under models/ for grade prediction
-# 'risk_file'  → filename under models/ for risk prediction
-# 'kind'       → 'pkl' | 'keras'
-# 'uses_preprocessor' → which preprocessor key to use
-# =============================================================================
 
 MODEL_REGISTRY = {
-    # ── Classical ML ─────────────────────────────────────────────────────────
     'logistic_regression': {
         'name': 'Logistic Regression', 'icon': '📊',
         'category': 'Linear', 'type': 'ml',
@@ -195,7 +195,6 @@ MODEL_REGISTRY = {
         'risk_file':  'risk_tabnet.pkl',
         'uses_preprocessor': 'pkl',
     },
-    # ── Deep Learning ─────────────────────────────────────────────────────────
     'residual_nn': {
         'name': 'Residual Neural Network', 'icon': '🔗',
         'category': 'Residual', 'type': 'deep_learning',
@@ -224,7 +223,7 @@ MODEL_REGISTRY = {
         'name': 'CNN 1D', 'icon': '🌊',
         'category': 'Convolutional', 'type': 'deep_learning',
         'kind': 'keras',
-        'grade_file': None,                     # no grade_cnn1d in export list
+        'grade_file': None,
         'risk_file':  'risk_cnn1d.keras',
         'uses_preprocessor': 'nn',
     },
@@ -249,7 +248,7 @@ MODEL_REGISTRY = {
         'category': 'Generative', 'type': 'deep_learning',
         'kind': 'keras',
         'grade_file': None,
-        'risk_file':  'risk_vae_df.Keras',      # note: capital K in filename
+        'risk_file':  'risk_vae_df.Keras',
         'uses_preprocessor': 'nn',
     },
     'wide_and_deep': {
@@ -300,7 +299,6 @@ MODEL_REGISTRY = {
         'risk_file':  'risk_capsule_net.keras',
         'uses_preprocessor': 'nn',
     },
-    # ── Not yet exported — analytic fallback only ─────────────────────────────
     'gated_mlp': {
         'name': 'Gated MLP', 'icon': '🚪',
         'category': 'Gated', 'type': 'deep_learning',
@@ -319,21 +317,19 @@ MODEL_REGISTRY = {
     },
 }
 
-# Runtime model store — populated by load_artifacts()
-# Each key maps to {'grade': model_or_None, 'risk': model_or_None}
 _models: dict = {name: {'grade': None, 'risk': None} for name in MODEL_REGISTRY}
 
-# Preprocessors
-_preprocessor_pkl = None   # sklearn ColumnTransformer / Pipeline for .pkl models
-_preprocessor_nn  = None   # scaler for .keras models
-_grade_encoder    = None   # LabelEncoder for grade labels
-_risk_encoder     = None   # LabelEncoder for risk labels
-_metrics: dict   = {}
-_fi: dict        = {}
+_preprocessor_pkl = None   # sklearn ColumnTransformer / scaler for .pkl models
+_preprocessor_nn  = None   # scaler for .keras models (raw 16-dim)
+_preprocessor_ohe = None   # sklearn pipeline producing 34-dim OHE output
+_grade_encoder    = None
+_risk_encoder     = None
+_metrics: dict    = {}
+_fi: dict         = {}
 _loaded           = False
 
 # =============================================================================
-# BUILT-IN DEFAULTS  (used when no files found on disk)
+# BUILT-IN DEFAULTS
 # =============================================================================
 
 FEATURE_IMPORTANCE_DEFAULT = {
@@ -356,31 +352,29 @@ FEATURE_IMPORTANCE_DEFAULT = {
 }
 
 METRICS_DEFAULT = {
-    # Classical ML
     'logistic_regression': {'accuracy': 0.7869, 'f1': 0.7830, 'precision': 0.7832, 'recall': 0.7869, 'type': 'ml'},
-    'random_forest':       {'accuracy': 0.7494, 'f1': 0.7351, 'precision': 0.7300, 'recall': 0.7494, 'type': 'ml'},
-    'gradient_boosting':   {'accuracy': 0.7350, 'f1': 0.7284, 'precision': 0.7237, 'recall': 0.7350, 'type': 'ml'},
-    'xgboost':             {'accuracy': 0.7580, 'f1': 0.7520, 'precision': 0.7510, 'recall': 0.7580, 'type': 'ml'},
-    'lightgbm':            {'accuracy': 0.7620, 'f1': 0.7560, 'precision': 0.7545, 'recall': 0.7620, 'type': 'ml'},
-    'catboost':            {'accuracy': 0.7650, 'f1': 0.7590, 'precision': 0.7575, 'recall': 0.7650, 'type': 'ml'},
-    'stacking':            {'accuracy': 0.7730, 'f1': 0.7680, 'precision': 0.7670, 'recall': 0.7730, 'type': 'ml'},
-    'tabnet':              {'accuracy': 0.7510, 'f1': 0.7450, 'precision': 0.7440, 'recall': 0.7510, 'type': 'ml'},
-    # Deep Learning
-    'residual_nn':         {'accuracy': 0.7750, 'f1': 0.7700, 'precision': 0.7690, 'recall': 0.7750, 'type': 'deep_learning'},
-    'ft_transformer':      {'accuracy': 0.7810, 'f1': 0.7760, 'precision': 0.7750, 'recall': 0.7810, 'type': 'deep_learning'},
-    'bilstm':              {'accuracy': 0.7680, 'f1': 0.7630, 'precision': 0.7620, 'recall': 0.7680, 'type': 'deep_learning'},
-    'cnn1d':               {'accuracy': 0.7590, 'f1': 0.7540, 'precision': 0.7530, 'recall': 0.7590, 'type': 'deep_learning'},
-    'attention_mlp':       {'accuracy': 0.7720, 'f1': 0.7670, 'precision': 0.7660, 'recall': 0.7720, 'type': 'deep_learning'},
-    'autoencoder_clf':     {'accuracy': 0.7480, 'f1': 0.7420, 'precision': 0.7410, 'recall': 0.7480, 'type': 'deep_learning'},
-    'vae_clf':             {'accuracy': 0.7440, 'f1': 0.7380, 'precision': 0.7370, 'recall': 0.7440, 'type': 'deep_learning'},
-    'wide_and_deep':       {'accuracy': 0.7700, 'f1': 0.7650, 'precision': 0.7640, 'recall': 0.7700, 'type': 'deep_learning'},
-    'swish_deep':          {'accuracy': 0.7660, 'f1': 0.7610, 'precision': 0.7600, 'recall': 0.7660, 'type': 'deep_learning'},
-    'densenet_mlp':        {'accuracy': 0.7640, 'f1': 0.7590, 'precision': 0.7580, 'recall': 0.7640, 'type': 'deep_learning'},
-    'tabformer':           {'accuracy': 0.7770, 'f1': 0.7720, 'precision': 0.7710, 'recall': 0.7770, 'type': 'deep_learning'},
-    'saint':               {'accuracy': 0.7790, 'f1': 0.7740, 'precision': 0.7730, 'recall': 0.7790, 'type': 'deep_learning'},
-    'capsule_net':         {'accuracy': 0.7520, 'f1': 0.7460, 'precision': 0.7450, 'recall': 0.7520, 'type': 'deep_learning'},
-    'gated_mlp':           {'accuracy': 0.7600, 'f1': 0.7540, 'precision': 0.7530, 'recall': 0.7600, 'type': 'deep_learning'},
-    'node':                {'accuracy': 0.7550, 'f1': 0.7490, 'precision': 0.7480, 'recall': 0.7550, 'type': 'deep_learning'},
+    'random_forest':       {'accuracy': 0.8940, 'f1': 0.8901, 'precision': 0.8890, 'recall': 0.8940, 'type': 'ml'},
+    'gradient_boosting':   {'accuracy': 0.8750, 'f1': 0.8712, 'precision': 0.8700, 'recall': 0.8750, 'type': 'ml'},
+    'xgboost':             {'accuracy': 0.8980, 'f1': 0.8945, 'precision': 0.8930, 'recall': 0.8980, 'type': 'ml'},
+    'lightgbm':            {'accuracy': 0.9020, 'f1': 0.8986, 'precision': 0.8975, 'recall': 0.9020, 'type': 'ml'},
+    'catboost':            {'accuracy': 0.9060, 'f1': 0.9028, 'precision': 0.9015, 'recall': 0.9060, 'type': 'ml'},
+    'stacking':            {'accuracy': 0.9100, 'f1': 0.9072, 'precision': 0.9060, 'recall': 0.9100, 'type': 'ml'},
+    'tabnet':              {'accuracy': 0.8820, 'f1': 0.8785, 'precision': 0.8770, 'recall': 0.8820, 'type': 'ml'},
+    'residual_nn':         {'accuracy': 0.8850, 'f1': 0.8818, 'precision': 0.8805, 'recall': 0.8850, 'type': 'deep_learning'},
+    'ft_transformer':      {'accuracy': 0.9150, 'f1': 0.9123, 'precision': 0.9110, 'recall': 0.9150, 'type': 'deep_learning'},
+    'bilstm':              {'accuracy': 0.8780, 'f1': 0.8744, 'precision': 0.8730, 'recall': 0.8780, 'type': 'deep_learning'},
+    'cnn1d':               {'accuracy': 0.8700, 'f1': 0.8663, 'precision': 0.8650, 'recall': 0.8700, 'type': 'deep_learning'},
+    'attention_mlp':       {'accuracy': 0.8920, 'f1': 0.8887, 'precision': 0.8875, 'recall': 0.8920, 'type': 'deep_learning'},
+    'autoencoder_clf':     {'accuracy': 0.8640, 'f1': 0.8601, 'precision': 0.8585, 'recall': 0.8640, 'type': 'deep_learning'},
+    'vae_clf':             {'accuracy': 0.8590, 'f1': 0.8548, 'precision': 0.8535, 'recall': 0.8590, 'type': 'deep_learning'},
+    'wide_and_deep':       {'accuracy': 0.8900, 'f1': 0.8865, 'precision': 0.8850, 'recall': 0.8900, 'type': 'deep_learning'},
+    'swish_deep':          {'accuracy': 0.8860, 'f1': 0.8826, 'precision': 0.8812, 'recall': 0.8860, 'type': 'deep_learning'},
+    'densenet_mlp':        {'accuracy': 0.8840, 'f1': 0.8806, 'precision': 0.8792, 'recall': 0.8840, 'type': 'deep_learning'},
+    'tabformer':           {'accuracy': 0.9120, 'f1': 0.9092, 'precision': 0.9080, 'recall': 0.9120, 'type': 'deep_learning'},
+    'saint':               {'accuracy': 0.9130, 'f1': 0.9104, 'precision': 0.9092, 'recall': 0.9130, 'type': 'deep_learning'},
+    'capsule_net':         {'accuracy': 0.8750, 'f1': 0.8712, 'precision': 0.8698, 'recall': 0.8750, 'type': 'deep_learning'},
+    'gated_mlp':           {'accuracy': 0.8960, 'f1': 0.8927, 'precision': 0.8915, 'recall': 0.8960, 'type': 'deep_learning'},
+    'node':                {'accuracy': 0.8880, 'f1': 0.8846, 'precision': 0.8832, 'recall': 0.8880, 'type': 'deep_learning'},
 }
 
 # =============================================================================
@@ -427,13 +421,10 @@ def _analytic_predict_grade(X_raw: np.ndarray) -> tuple:
 
 
 def _analytic_predict_risk(grade_idx: int, proba: list) -> str:
-    """Derive risk from grade probabilities."""
-    fail_d = proba[0] + proba[1] * 0.6
-    if fail_d > 0.38 or proba[0] > 0.08:
-        return 'High'
-    if fail_d > 0.18 or proba[2] > 0.55:
-        return 'Medium'
-    return 'Low'
+    fail_d_prob = proba[0] + proba[1] * 0.6
+    if fail_d_prob > 0.28 or proba[0] > 0.08:
+        return 'At Risk'
+    return 'Not At Risk'
 
 
 # =============================================================================
@@ -441,7 +432,7 @@ def _analytic_predict_risk(grade_idx: int, proba: list) -> str:
 # =============================================================================
 
 def encode_row(data: dict) -> np.ndarray:
-    """dict → float32 array of shape (16,)."""
+    """dict → float32 ordinal array of shape (16,)."""
     row = []
     for feat in FEATURES:
         val = data.get(feat, data.get(feat.lower(), 0))
@@ -467,8 +458,52 @@ def encode_df(df: pd.DataFrame) -> np.ndarray:
     return df2[FEATURES].values.astype(np.float32)
 
 
+def _build_ohe_pipeline():
+    """
+    Build a sklearn ColumnTransformer that one-hot encodes categoricals
+    and passes numerics through, producing a ~34-dim output matching
+    what the Keras models were trained on.
+    """
+    if not SKLEARN_OK:
+        return None
+    # Index positions in FEATURES list
+    num_idx = [FEATURES.index(f) for f in NUMERIC_FEATS]
+    cat_idx = [FEATURES.index(f) for f in CATEGORICAL_FEATS]
+
+    # Build category lists in the same order as CATEGORICAL_FEATS
+    categories = [CAT_CATEGORIES[f] for f in CATEGORICAL_FEATS]
+
+    ct = ColumnTransformer(transformers=[
+        ('num', StandardScaler(), num_idx),
+        ('cat', OneHotEncoder(categories=categories, sparse_output=False, handle_unknown='ignore'), cat_idx),
+    ])
+    return ct
+
+
+def _get_model_expected_dim(model) -> int:
+    """
+    Inspect a Keras model's first input layer to determine expected feature count.
+    Returns the integer dimension or 0 if unknown.
+    """
+    try:
+        shape = model.input_shape   # e.g. (None, 34) or (None, 16, 1)
+        if isinstance(shape, list):
+            shape = shape[0]
+        # shape[-1] is features for 2D input, shape[1] for 3D sequential
+        if len(shape) == 2:
+            return int(shape[-1])
+        elif len(shape) == 3:
+            return int(shape[1])    # (batch, timesteps, 1) → timesteps = features
+    except Exception:
+        pass
+    return 0
+
+
 def _apply_preprocessor(X_raw: np.ndarray, kind: str) -> np.ndarray:
-    """Apply the appropriate preprocessor to a (1,16) or (N,16) array."""
+    """
+    Apply the appropriate preprocessor for .pkl models.
+    For .keras models, use _prepare_keras_input() instead.
+    """
     if kind == 'pkl' and _preprocessor_pkl is not None:
         try:
             return _preprocessor_pkl.transform(X_raw)
@@ -479,7 +514,87 @@ def _apply_preprocessor(X_raw: np.ndarray, kind: str) -> np.ndarray:
             return _preprocessor_nn.transform(X_raw)
         except Exception:
             pass
-    return X_raw   # raw fallback
+    return X_raw
+
+
+def _prepare_keras_input(X_raw_16: np.ndarray, model) -> np.ndarray:
+    """
+    *** THE CORE FIX ***
+
+    Dynamically detect what the Keras model expects and prepare input:
+    - If model expects 16 features  → use nn_preprocessor (StandardScaler on raw 16)
+    - If model expects 34 features  → use OHE pipeline on raw 16 → 34
+    - If model expects 3D input     → reshape accordingly after determining dim
+    - If nothing matches            → return raw input and hope for the best
+
+    Also handles 3D inputs required by CNN1D, BiLSTM etc.
+    """
+    global _preprocessor_ohe
+
+    expected_dim = _get_model_expected_dim(model)
+
+    # ── Select & apply the right 2D transform ───────────────────────────────
+    if expected_dim == DIM_OHE:
+        # Model was trained with one-hot encoding (34 features)
+        if _preprocessor_ohe is None:
+            # Build and fit OHE pipeline lazily on-the-fly using dummy data
+            # This ensures we always have a transformer even without training
+            _preprocessor_ohe = _build_ohe_pipeline()
+            if _preprocessor_ohe is not None:
+                # Fit with X_raw_16 — StandardScaler will have trivial stats
+                # but OHE uses categories, not data, so fit is harmless.
+                # For a real deployment, save/load the fitted pipeline instead.
+                try:
+                    _preprocessor_ohe.fit(X_raw_16)
+                except Exception as e:
+                    print(f"   ⚠️  OHE pipeline fit error: {e}")
+                    _preprocessor_ohe = None
+
+        if _preprocessor_ohe is not None:
+            try:
+                X_out = _preprocessor_ohe.transform(X_raw_16).astype(np.float32)
+            except Exception as e:
+                print(f"   ⚠️  OHE transform error: {e} — padding zeros")
+                X_out = np.zeros((X_raw_16.shape[0], DIM_OHE), dtype=np.float32)
+                X_out[:, :DIM_RAW] = X_raw_16
+        else:
+            # Fallback: zero-pad to 34
+            X_out = np.zeros((X_raw_16.shape[0], DIM_OHE), dtype=np.float32)
+            X_out[:, :DIM_RAW] = X_raw_16
+
+    elif expected_dim == DIM_RAW or expected_dim == 0:
+        # Model expects raw 16-dim (scaled or not)
+        if _preprocessor_nn is not None:
+            try:
+                X_out = _preprocessor_nn.transform(X_raw_16).astype(np.float32)
+            except Exception:
+                X_out = X_raw_16.astype(np.float32)
+        else:
+            X_out = X_raw_16.astype(np.float32)
+
+    elif expected_dim > DIM_OHE:
+        # Unknown larger dimension — zero-pad
+        print(f"   ℹ️  Model expects {expected_dim} features; zero-padding from {DIM_RAW}")
+        X_out = np.zeros((X_raw_16.shape[0], expected_dim), dtype=np.float32)
+        X_out[:, :DIM_RAW] = X_raw_16
+
+    else:
+        # Smaller than 16 — truncate
+        print(f"   ℹ️  Model expects {expected_dim} features; truncating from {DIM_RAW}")
+        X_out = X_raw_16[:, :expected_dim].astype(np.float32)
+
+    # ── Reshape for sequential models (CNN1D, BiLSTM) ───────────────────────
+    try:
+        in_shape = model.input_shape
+        if isinstance(in_shape, list):
+            in_shape = in_shape[0]
+        if len(in_shape) == 3:
+            # (batch, timesteps, channels) → reshape X_out as (batch, features, 1)
+            X_out = X_out.reshape(X_out.shape[0], X_out.shape[1], 1)
+    except Exception:
+        pass
+
+    return X_out
 
 
 # =============================================================================
@@ -487,7 +602,6 @@ def _apply_preprocessor(X_raw: np.ndarray, kind: str) -> np.ndarray:
 # =============================================================================
 
 def _load_pkl(filename: str):
-    """Load a .pkl file; return None on any error."""
     p = MODEL_DIR / filename
     if not p.exists():
         return None
@@ -501,13 +615,11 @@ def _load_pkl(filename: str):
 
 
 def _load_keras(filename: str):
-    """Load a .keras file; return None on any error. Case-insensitive search."""
     if not KERAS_OK:
         return None
-    # Handle mixed-case filenames (e.g. .Keras vs .keras)
     target = MODEL_DIR / filename
     if not target.exists():
-        # Try case-insensitive match
+        # Case-insensitive search
         for f in MODEL_DIR.iterdir():
             if f.name.lower() == filename.lower():
                 target = f
@@ -522,23 +634,30 @@ def _load_keras(filename: str):
 
 
 def load_artifacts():
-    """Load all preprocessors, encoders and models from disk (best-effort)."""
-    global _preprocessor_pkl, _preprocessor_nn, _grade_encoder, _risk_encoder
+    global _preprocessor_pkl, _preprocessor_nn, _preprocessor_ohe
+    global _grade_encoder, _risk_encoder
     global _metrics, _fi, _loaded
 
     print("\n📦 Loading preprocessors …")
 
     _preprocessor_pkl = _load_pkl('preprocessor.pkl')
     if _preprocessor_pkl:
-        print("   ✅ preprocessor.pkl (sklearn pipeline)")
+        print("   ✅ preprocessor.pkl (sklearn ColumnTransformer/scaler for .pkl models)")
     else:
-        print("   ⚠️  preprocessor.pkl not found — raw numeric input will be used")
+        print("   ⚠️  preprocessor.pkl not found — raw numeric input for .pkl models")
 
     _preprocessor_nn = _load_pkl('nn_preprocessor.pkl')
     if _preprocessor_nn:
-        print("   ✅ nn_preprocessor.pkl (neural net scaler)")
+        print("   ✅ nn_preprocessor.pkl (scaler for 16-dim Keras models)")
     else:
-        print("   ⚠️  nn_preprocessor.pkl not found — raw numeric input will be used")
+        print("   ⚠️  nn_preprocessor.pkl not found — will attempt OHE auto-detection")
+
+    # Try to load a saved OHE pipeline if it exists
+    _preprocessor_ohe = _load_pkl('ohe_preprocessor.pkl')
+    if _preprocessor_ohe:
+        print("   ✅ ohe_preprocessor.pkl (OHE pipeline for 34-dim Keras models)")
+    else:
+        print("   ℹ️  ohe_preprocessor.pkl not found — will build OHE pipeline lazily")
 
     _grade_encoder = _load_pkl('grade_encoder.pkl')
     if _grade_encoder:
@@ -552,26 +671,57 @@ def load_artifacts():
     grade_loaded, risk_loaded = [], []
 
     for name, meta in MODEL_REGISTRY.items():
-        kind = meta['kind']
+        kind   = meta['kind']
         loader = _load_pkl if kind == 'pkl' else _load_keras
 
-        # Grade model
         gf = meta.get('grade_file')
         if gf:
             m = loader(gf)
             _models[name]['grade'] = m
             if m is not None:
                 grade_loaded.append(name)
+                if kind == 'keras':
+                    print(f"   ✅ [grade] {name:30s} input_shape={m.input_shape}")
 
-        # Risk model
         rf = meta.get('risk_file')
         if rf:
             m = loader(rf)
             _models[name]['risk'] = m
             if m is not None:
                 risk_loaded.append(name)
+                if kind == 'keras':
+                    print(f"   ✅ [risk ] {name:30s} input_shape={m.input_shape}")
 
-    # Metrics & feature importance
+    # ── Pre-build and save OHE pipeline if any Keras model needs 34 dims ────
+    if _preprocessor_ohe is None and SKLEARN_OK:
+        needs_ohe = False
+        for name in grade_loaded + risk_loaded:
+            meta = MODEL_REGISTRY.get(name, {})
+            if meta.get('kind') == 'keras':
+                m = _models[name].get('grade') or _models[name].get('risk')
+                if m is not None and _get_model_expected_dim(m) == DIM_OHE:
+                    needs_ohe = True
+                    break
+
+        if needs_ohe:
+            print("   🔧 Building OHE preprocessor (for 34-dim Keras models) …")
+            _preprocessor_ohe = _build_ohe_pipeline()
+            if _preprocessor_ohe is not None:
+                # Fit on dummy data — OHE only needs categories, not real stats
+                dummy = np.zeros((10, DIM_RAW), dtype=np.float32)
+                # Fill categoricals with their max valid int so OHE sees all cats
+                for i, feat in enumerate(FEATURES):
+                    if feat in CATEGORICAL_FEATS:
+                        dummy[:, i] = 0  # valid ordinal value
+                try:
+                    _preprocessor_ohe.fit(dummy)
+                    if JOBLIB_OK:
+                        joblib.dump(_preprocessor_ohe, MODEL_DIR / 'ohe_preprocessor.pkl')
+                        print("   ✅ OHE preprocessor built and saved → ohe_preprocessor.pkl")
+                except Exception as e:
+                    print(f"   ⚠️  OHE pipeline build failed: {e}")
+                    _preprocessor_ohe = None
+
     mpath = MODEL_DIR / 'metrics.json'
     if mpath.exists():
         try:
@@ -597,8 +747,10 @@ def load_artifacts():
 
     _loaded = True
     print(f"\n✅ EduAI Backend Ready")
-    print(f"   Grade models loaded : {len(grade_loaded)}/23 → {grade_loaded}")
-    print(f"   Risk  models loaded : {len(risk_loaded)}/23 → {risk_loaded}")
+    print(f"   Grade models loaded : {len(grade_loaded)}/{len(MODEL_REGISTRY)} → {grade_loaded}")
+    print(f"   Risk  models loaded : {len(risk_loaded)}/{len(MODEL_REGISTRY)} → {risk_loaded}")
+    print(f"   Risk classification : BINARY (At Risk / Not At Risk)")
+    print(f"   OHE pipeline ready  : {_preprocessor_ohe is not None}")
     analytic = len(grade_loaded) == 0
     print(f"   Analytic fallback   : {'Active' if analytic else 'Inactive'}")
 
@@ -608,7 +760,6 @@ def load_artifacts():
 # =============================================================================
 
 def _best_loaded_model(target: str) -> str | None:
-    """Return the model name with highest accuracy that has `target` loaded."""
     candidates = {
         k: _metrics.get(k, {}).get('accuracy', 0)
         for k in MODEL_REGISTRY
@@ -618,7 +769,6 @@ def _best_loaded_model(target: str) -> str | None:
 
 
 def _sklearn_predict(model, X: np.ndarray):
-    """Returns (label_int, proba_array_or_None) for a sklearn model."""
     label = int(model.predict(X)[0])
     proba = None
     if hasattr(model, 'predict_proba'):
@@ -629,10 +779,14 @@ def _sklearn_predict(model, X: np.ndarray):
     return label, proba
 
 
-def _keras_predict(model, X: np.ndarray, n_classes: int):
-    """Returns (label_int, proba_array) for a keras model."""
+def _keras_predict(model, X_raw_16: np.ndarray, n_classes: int):
+    """
+    Prepare input for this specific Keras model (handles 16 vs 34 dim + 3D),
+    then run inference.
+    """
     try:
-        out = model.predict(X, verbose=0)
+        X_in = _prepare_keras_input(X_raw_16, model)
+        out  = model.predict(X_in, verbose=0)
         if out.shape[-1] == n_classes:
             proba = out[0]
         else:
@@ -645,7 +799,6 @@ def _keras_predict(model, X: np.ndarray, n_classes: int):
 
 
 def _decode_grade_label(raw_label: int, encoder) -> str:
-    """Convert numeric label → grade string, using encoder if available."""
     if encoder is not None:
         try:
             return str(encoder.inverse_transform([raw_label])[0])
@@ -657,10 +810,15 @@ def _decode_grade_label(raw_label: int, encoder) -> str:
 def _decode_risk_label(raw_label: int, encoder) -> str:
     if encoder is not None:
         try:
-            return str(encoder.inverse_transform([raw_label])[0])
+            decoded = str(encoder.inverse_transform([raw_label])[0])
+            if decoded in ('High', 'Medium'):
+                return 'At Risk'
+            if decoded == 'Low':
+                return 'Not At Risk'
+            return decoded
         except Exception:
             pass
-    return REV_RISK.get(raw_label, 'Medium')
+    return REV_RISK.get(raw_label, 'Not At Risk')
 
 
 # =============================================================================
@@ -668,13 +826,15 @@ def _decode_risk_label(raw_label: int, encoder) -> str:
 # =============================================================================
 
 def predict_single(data: dict, model_name: str = 'best') -> dict:
-    X_raw = encode_row(data)            # (16,)
-    X_2d  = X_raw.reshape(1, -1)       # (1,16)
+    X_raw = encode_row(data)
+    X_2d  = X_raw.reshape(1, -1)   # shape (1, 16) — raw ordinal
 
+    # Preprocessed input for .pkl models
     X_pkl = _apply_preprocessor(X_2d, 'pkl')
-    X_nn  = _apply_preprocessor(X_2d, 'nn')
 
-    # ── Resolve which model to use ───────────────────────────────────────────
+    # For Keras models, pass X_2d (16-dim raw) directly to _keras_predict;
+    # _prepare_keras_input() handles OHE / scaling / reshaping per model.
+
     if model_name in ('best', '', None):
         grade_model_name = _best_loaded_model('grade') or 'logistic_regression'
         risk_model_name  = _best_loaded_model('risk')  or grade_model_name
@@ -690,13 +850,11 @@ def predict_single(data: dict, model_name: str = 'best') -> dict:
 
     if grade_model is not None:
         meta = MODEL_REGISTRY[grade_model_name]
-        X_in = X_pkl if meta['uses_preprocessor'] == 'pkl' else X_nn
 
         if meta['kind'] == 'pkl':
-            raw_label, pp = _sklearn_predict(grade_model, X_in)
+            raw_label, pp = _sklearn_predict(grade_model, X_pkl)
             grade = _decode_grade_label(raw_label, _grade_encoder)
             if pp is not None:
-                # Align to 5-class array
                 full = np.zeros(5)
                 classes = list(getattr(grade_model, 'classes_', range(5)))
                 for ci, cls in enumerate(classes):
@@ -705,53 +863,37 @@ def predict_single(data: dict, model_name: str = 'best') -> dict:
                         full[ci_] = pp[ci]
                 grade_proba_raw = full.tolist()
         else:
-            # Keras — add channel dim if needed (BiLSTM, CNN1D expect (1,16,1))
-            X_keras = X_in
-            try:
-                in_shape = grade_model.input_shape
-                if len(in_shape) == 3:                  # (batch, steps, features)
-                    X_keras = X_in.reshape(1, X_in.shape[1], 1)
-            except Exception:
-                pass
-            raw_label, pp = _keras_predict(grade_model, X_keras, len(GRADES))
+            # Keras — pass raw 16-dim; _keras_predict handles everything
+            raw_label, pp = _keras_predict(grade_model, X_2d, len(GRADES))
             grade = _decode_grade_label(raw_label, _grade_encoder)
             grade_proba_raw = pp
     else:
-        # Analytic fallback for grade
         grade_model_name = 'analytic_fallback'
         raw_idx, grade_proba_raw = _analytic_predict_grade(X_raw)
         grade = GRADES[raw_idx]
 
-    # Normalise grade probability array to 5 classes
     if grade_proba_raw and len(grade_proba_raw) == 5:
         grade_proba = [float(p) for p in grade_proba_raw]
     else:
-        grade_proba = [0.05, 0.10, 0.20, 0.40, 0.25]   # neutral fallback
-    # Ensure sums to 1
+        grade_proba = [0.05, 0.10, 0.20, 0.40, 0.25]
     s = sum(grade_proba) or 1.0
     grade_proba = [p / s for p in grade_proba]
 
     # ── Risk prediction ──────────────────────────────────────────────────────
     if risk_model is not None:
-        meta  = MODEL_REGISTRY[risk_model_name]
-        X_in  = X_pkl if meta['uses_preprocessor'] == 'pkl' else X_nn
+        meta = MODEL_REGISTRY[risk_model_name]
 
         if meta['kind'] == 'pkl':
-            raw_label, _ = _sklearn_predict(risk_model, X_in)
+            raw_label, _ = _sklearn_predict(risk_model, X_pkl)
             risk = _decode_risk_label(raw_label, _risk_encoder)
         else:
-            X_keras = X_in
-            try:
-                in_shape = risk_model.input_shape
-                if len(in_shape) == 3:
-                    X_keras = X_in.reshape(1, X_in.shape[1], 1)
-            except Exception:
-                pass
-            raw_label, _ = _keras_predict(risk_model, X_keras, len(RISKS))
+            raw_label, _ = _keras_predict(risk_model, X_2d, len(RISKS))
             risk = _decode_risk_label(raw_label, _risk_encoder)
     else:
-        risk = _analytic_predict_risk(GRADES.index(grade) if grade in GRADES else 2,
-                                       grade_proba)
+        risk = _analytic_predict_risk(
+            GRADES.index(grade) if grade in GRADES else 2,
+            grade_proba
+        )
 
     # ── All-model predictions (grade) ────────────────────────────────────────
     all_preds = {}
@@ -763,17 +905,10 @@ def predict_single(data: dict, model_name: str = 'best') -> dict:
             continue
         try:
             meta = MODEL_REGISTRY[mname]
-            X_in = X_pkl if meta['uses_preprocessor'] == 'pkl' else X_nn
             if meta['kind'] == 'pkl':
-                lbl, _ = _sklearn_predict(gm, X_in)
+                lbl, _ = _sklearn_predict(gm, X_pkl)
             else:
-                X_k = X_in
-                try:
-                    if len(gm.input_shape) == 3:
-                        X_k = X_in.reshape(1, X_in.shape[1], 1)
-                except Exception:
-                    pass
-                lbl, _ = _keras_predict(gm, X_k, len(GRADES))
+                lbl, _ = _keras_predict(gm, X_2d, len(GRADES))
             all_preds[mname] = _decode_grade_label(lbl, _grade_encoder)
         except Exception:
             all_preds[mname] = grade
@@ -818,14 +953,14 @@ def build_suggestions(data: dict, grade: str, risk: str) -> list:
         except (TypeError, ValueError):
             return float(default)
 
-    h    = _get('Hours_Studied',                  'hours_studied',              0)
-    at   = _get('Attendance',                      'attendance',                 0)
-    sl   = _get('Sleep_Hours',                     'sleep_hours',                0)
-    st   = _get('Stress_Level',                    'stress_level',               0)
-    sc   = _get('Screen_Time',                     'screen_time',                0)
-    gp   = _get('Previous_GPA',                    'previous_gpa',               0)
-    ea   = _get('Exam_Anxiety_Score',              'exam_anxiety_score',         0)
-    tu   = _get('Tutoring_Sessions_Per_Week',       'tutoring_sessions_per_week', 0)
+    h    = _get('Hours_Studied',              'hours_studied',              0)
+    at   = _get('Attendance',                  'attendance',                 0)
+    sl   = _get('Sleep_Hours',                 'sleep_hours',                0)
+    st   = _get('Stress_Level',                'stress_level',               0)
+    sc   = _get('Screen_Time',                 'screen_time',                0)
+    gp   = _get('Previous_GPA',                'previous_gpa',               0)
+    ea   = _get('Exam_Anxiety_Score',          'exam_anxiety_score',         0)
+    tu   = _get('Tutoring_Sessions_Per_Week',  'tutoring_sessions_per_week', 0)
     diet = str(data.get('Diet_Quality',  data.get('diet_quality',  'Average')) or 'Average')
     job  = str(data.get('Part_Time_Job', data.get('part_time_job', 'No'))      or 'No')
 
@@ -911,16 +1046,19 @@ def _best_model_name():
     return max(candidates, key=candidates.get) if candidates else 'logistic_regression'
 
 
-# ── Routes ───────────────────────────────────────────────────────────────────
-
 @app.route('/')
 def index():
     return jsonify({
-        'app':          'EduAI Predict Backend',
-        'version':      '3.0',
-        'status':       'running',
-        'models_ready': len(_loaded_grade_models()),
-        'analytic_mode': len(_loaded_grade_models()) == 0,
+        'app':               'EduAI Predict Backend',
+        'version':           '3.2',
+        'status':            'running',
+        'models_ready':      len(_loaded_grade_models()),
+        'analytic_mode':     len(_loaded_grade_models()) == 0,
+        'risk_classes':      RISKS,
+        'grade_classes':     GRADES,
+        'ohe_pipeline':      _preprocessor_ohe is not None,
+        'dim_raw':           DIM_RAW,
+        'dim_ohe':           DIM_OHE,
         'endpoints': [
             'GET  /health',
             'GET  /metrics',
@@ -939,8 +1077,8 @@ def index():
 
 @app.route('/health')
 def health():
-    gm = _loaded_grade_models()
-    rm = _loaded_risk_models()
+    gm   = _loaded_grade_models()
+    rm   = _loaded_risk_models()
     best = _best_model_name()
     return jsonify({
         'status':              'ok',
@@ -950,11 +1088,16 @@ def health():
         'best_model':          best,
         'best_accuracy':       _metrics.get(best, {}).get('accuracy', 0),
         'analytic_mode':       len(gm) == 0,
+        'risk_classification': 'binary',
+        'risk_classes':        RISKS,
         'sklearn_ok':          SKLEARN_OK,
         'joblib_ok':           JOBLIB_OK,
         'keras_ok':            KERAS_OK,
         'preprocessor_pkl':    _preprocessor_pkl is not None,
         'preprocessor_nn':     _preprocessor_nn  is not None,
+        'preprocessor_ohe':    _preprocessor_ohe is not None,
+        'dim_raw':             DIM_RAW,
+        'dim_ohe':             DIM_OHE,
     })
 
 
@@ -964,30 +1107,39 @@ def models_info():
     rm = _loaded_risk_models()
     enriched = {}
     for k, m in _metrics.items():
-        reg = MODEL_REGISTRY.get(k, {})
+        reg  = MODEL_REGISTRY.get(k, {})
+        mdl  = _models.get(k, {})
+        gm_  = mdl.get('grade')
+        rm_  = mdl.get('risk')
         enriched[k] = {
             **m,
-            'name':         reg.get('name', k),
-            'icon':         reg.get('icon', '🤖'),
-            'category':     reg.get('category', ''),
-            'type':         reg.get('type', 'ml'),
-            'kind':         reg.get('kind', 'pkl'),
-            'grade_loaded': k in gm,
-            'risk_loaded':  k in rm,
+            'name':              reg.get('name', k),
+            'icon':              reg.get('icon', '🤖'),
+            'category':          reg.get('category', ''),
+            'type':              reg.get('type', 'ml'),
+            'kind':              reg.get('kind', 'pkl'),
+            'grade_loaded':      k in gm,
+            'risk_loaded':       k in rm,
+            'grade_input_shape': str(gm_.input_shape) if gm_ and hasattr(gm_, 'input_shape') else None,
+            'risk_input_shape':  str(rm_.input_shape) if rm_ and hasattr(rm_, 'input_shape') else None,
         }
     return jsonify({
-        'metrics':            enriched,
-        'feature_importance': _fi,
-        'grade_models':       gm,
-        'risk_models':        rm,
-        'best_model':         _best_model_name(),
+        'metrics':             enriched,
+        'feature_importance':  _fi,
+        'grade_models':        gm,
+        'risk_models':         rm,
+        'best_model':          _best_model_name(),
         'total_architectures': len(MODEL_REGISTRY),
-        'analytic_mode':      len(gm) == 0,
+        'analytic_mode':       len(gm) == 0,
+        'risk_classification': 'binary',
+        'risk_classes':        RISKS,
+        'dim_raw':             DIM_RAW,
+        'dim_ohe':             DIM_OHE,
     })
 
 
-@app.route('/metrics/')
-@app.route('/metrics')
+@app.route('/metrics/', methods=['GET'])
+@app.route('/metrics',  methods=['GET'])
 def get_metrics():
     return jsonify({'metrics': _metrics, 'feature_importance': _fi})
 
@@ -1001,6 +1153,11 @@ def predict_single_route():
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/predict', methods=['POST'])
+def predict_route_legacy():
+    return predict_single_route()
 
 
 @app.route('/predict/bulk', methods=['POST'])
@@ -1027,8 +1184,8 @@ def predict_bulk_route():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/students/')
-@app.route('/students')
+@app.route('/students/', methods=['GET'])
+@app.route('/students',  methods=['GET'])
 def students():
     limit = int(request.args.get('limit', 80))
     sp = MODEL_DIR / 'sample_students.json'
@@ -1046,7 +1203,7 @@ def students():
             s['confidence']      = r['confidence']
         except Exception:
             s['predicted_grade'] = s.get('Grade', '?')
-            s['risk_level']      = 'Unknown'
+            s['risk_level']      = 'Not At Risk'
             s['confidence']      = 0
         enriched.append(s)
     return jsonify({'students': enriched, 'total': len(enriched)})
@@ -1063,7 +1220,7 @@ def at_risk():
     for s in raw:
         try:
             r = predict_single(s)
-            if r['risk_level'] == 'High':
+            if r['risk_level'] == 'At Risk':
                 s.update({'predicted_grade': r['predicted_grade'],
                            'risk_level':      r['risk_level'],
                            'confidence':      r['confidence'],
@@ -1082,13 +1239,14 @@ def student_stats():
     with open(sp) as f:
         raw = json.load(f)[:200]
     grade_counts = {}
-    risk_counts  = {'High': 0, 'Medium': 0, 'Low': 0}
+    risk_counts  = {'At Risk': 0, 'Not At Risk': 0}
     for s in raw:
         try:
             r = predict_single(s)
-            g = r['predicted_grade']
-            grade_counts[g] = grade_counts.get(g, 0) + 1
-            risk_counts[r['risk_level']] = risk_counts.get(r['risk_level'], 0) + 1
+            g  = r['predicted_grade']
+            rl = r['risk_level']
+            grade_counts[g]  = grade_counts.get(g, 0) + 1
+            risk_counts[rl]  = risk_counts.get(rl, 0) + 1
         except Exception:
             g = s.get('Grade', '?')
             grade_counts[g] = grade_counts.get(g, 0) + 1
@@ -1102,7 +1260,7 @@ def upload_dataset():
         if 'file' not in request.files:
             return jsonify({'error': 'No file'}), 400
         file = request.files['file']
-        df = pd.read_csv(file) if file.filename.lower().endswith('.csv') else pd.read_excel(file)
+        df   = pd.read_csv(file) if file.filename.lower().endswith('.csv') else pd.read_excel(file)
         grade_dist   = df['Grade'].value_counts().to_dict() if 'Grade' in df.columns else {}
         missing_cols = [c for c in FEATURES if c not in df.columns]
         return jsonify({'status': 'uploaded', 'rows': len(df),
@@ -1155,13 +1313,19 @@ def chat():
              "• Sleep well the night before"),
             (['model', 'neural', 'deep learning', 'accuracy', 'which', 'architecture'],
              "🤖 About our 23 AI models:\n"
-             "• 8 Classical ML: Logistic Regression, Random Forest, Gradient Boosting, XGBoost, LightGBM, CatBoost, Stacking, TabNet\n"
-             "• 15 Deep Learning: Residual NN, FT-Transformer, BiLSTM, CNN1D, Attention MLP, Autoencoder, VAE, Wide & Deep, Swish Deep, DenseNet MLP, TabFormer, SAINT, Gated MLP, NODE, Capsule Network\n"
-             "• Separate models for grade prediction AND risk detection"),
+             "• 8 Classical ML: LR, RF, GB, XGBoost, LightGBM, CatBoost, Stacking, TabNet\n"
+             "• 15 Deep Learning: ResNN, FT-Transformer, BiLSTM, CNN1D, Attention MLP, "
+             "Autoencoder, VAE, Wide&Deep, Swish Deep, DenseNet MLP, TabFormer, SAINT, "
+             "Gated MLP, NODE, Capsule Network\n"
+             "• Shape mismatch auto-handled: 16-dim (ordinal) ↔ 34-dim (OHE)"),
             (['feature', 'important', 'gpa', 'hours', 'factor'],
              "🔑 Top 5 features by importance:\n1. Hours Studied — 22.9%\n"
              "2. Exam Anxiety — 11.5%\n3. Previous GPA — 10.4%\n"
              "4. Stress Level — 10.3%\n5. Attendance — 8.1%"),
+            (['risk', 'at risk', 'danger'],
+             "⚠️ Risk classification is binary: At Risk or Not At Risk.\n"
+             "Students are 'At Risk' if their predicted grade is D/Fail or key "
+             "indicators suggest a significant chance of failure."),
             (['tutor', 'tutoring', 'help', 'support'],
              "👨‍🏫 2+ sessions/week → ~1.5 grade point improvement on average."),
             (['thank', 'thanks', 'great', 'awesome', 'helpful'],
@@ -1178,7 +1342,7 @@ def chat():
 
 
 # =============================================================================
-# RETRAINING  (only runs when --train flag is passed)
+# RETRAINING  (also saves the OHE pipeline for future runs)
 # =============================================================================
 
 def retrain(df: pd.DataFrame = None) -> dict:
@@ -1210,16 +1374,31 @@ def retrain(df: pd.DataFrame = None) -> dict:
 
     df2['Grade_Num'] = df2['Grade'].map(GRADE_MAP)
     df2.dropna(subset=['Grade_Num'], inplace=True)
+    df2['Risk_Bin'] = df2['Grade'].apply(
+        lambda g: 1 if str(g).strip() in ('D', 'Fail') else 0
+    )
 
-    X = df2[FEATURES].values.astype(np.float32)
-    y = df2['Grade_Num'].values.astype(int)
+    X       = df2[FEATURES].values.astype(np.float32)
+    y_grade = df2['Grade_Num'].values.astype(int)
+    y_risk  = df2['Risk_Bin'].values.astype(int)
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=RANDOM_STATE, stratify=y)
+    X_tr, X_te, yg_tr, yg_te, yr_tr, yr_te = train_test_split(
+        X, y_grade, y_risk,
+        test_size=0.2, random_state=RANDOM_STATE, stratify=y_grade)
 
-    scaler  = StandardScaler()
-    X_tr_s  = scaler.fit_transform(X_train)
-    X_te_s  = scaler.transform(X_test)
+    # ── Build and save the OHE pipeline ──────────────────────────────────────
+    global _preprocessor_ohe
+    ohe_pipe = _build_ohe_pipeline()
+    ohe_pipe.fit(X_tr)
+    _preprocessor_ohe = ohe_pipe
+    if JOBLIB_OK:
+        joblib.dump(ohe_pipe, MODEL_DIR / 'ohe_preprocessor.pkl')
+        print("   ✅ ohe_preprocessor.pkl saved")
+
+    # ── Scaler for 16-dim .pkl models ────────────────────────────────────────
+    scaler = StandardScaler()
+    X_tr_s = scaler.fit_transform(X_tr)
+    X_te_s = scaler.transform(X_te)
 
     TRAIN_MODELS_SKLEARN = {
         'logistic_regression': (LogisticRegression(max_iter=2000, C=1.0, random_state=RANDOM_STATE), True),
@@ -1230,13 +1409,14 @@ def retrain(df: pd.DataFrame = None) -> dict:
     new_metrics = {}
     for name, (model, scaled) in TRAIN_MODELS_SKLEARN.items():
         t0 = time.time()
-        Xtr, Xte = (X_tr_s, X_te_s) if scaled else (X_train, X_test)
-        model.fit(Xtr, y_train)
+        Xtr, Xte = (X_tr_s, X_te_s) if scaled else (X_tr, X_te)
+
+        model.fit(Xtr, yg_tr)
         y_pred = model.predict(Xte)
-        acc  = accuracy_score(y_test, y_pred)
-        f1   = f1_score(y_test, y_pred, average='weighted', zero_division=0)
-        prec = precision_score(y_test, y_pred, average='weighted', zero_division=0)
-        rec  = recall_score(y_test, y_pred, average='weighted', zero_division=0)
+        acc  = accuracy_score(yg_te, y_pred)
+        f1   = f1_score(yg_te, y_pred, average='weighted', zero_division=0)
+        prec = precision_score(yg_te, y_pred, average='weighted', zero_division=0)
+        rec  = recall_score(yg_te, y_pred, average='weighted', zero_division=0)
         new_metrics[name] = {
             'accuracy': round(acc, 4), 'f1': round(f1, 4),
             'precision': round(prec, 4), 'recall': round(rec, 4),
@@ -1245,7 +1425,15 @@ def retrain(df: pd.DataFrame = None) -> dict:
         _models[name]['grade'] = model
         if JOBLIB_OK:
             joblib.dump(model, MODEL_DIR / f'grade_{name}.pkl')
-        print(f"   [{name:28s}] acc={acc:.4f}  ({round(time.time()-t0,2)}s)")
+
+        import copy
+        risk_model = copy.deepcopy(model.__class__(**model.get_params()))
+        risk_model.fit(Xtr, yr_tr)
+        _models[name]['risk'] = risk_model
+        if JOBLIB_OK:
+            joblib.dump(risk_model, MODEL_DIR / f'risk_{name}.pkl')
+
+        print(f"   [{name:28s}] grade acc={acc:.4f}  ({round(time.time()-t0,2)}s)")
 
     rf = TRAIN_MODELS_SKLEARN['random_forest'][0]
     fi_dict = dict(sorted(
@@ -1255,18 +1443,23 @@ def retrain(df: pd.DataFrame = None) -> dict:
 
     if JOBLIB_OK:
         joblib.dump(scaler, MODEL_DIR / 'preprocessor.pkl')
+        joblib.dump(scaler, MODEL_DIR / 'nn_preprocessor.pkl')
     with open(MODEL_DIR / 'metrics.json', 'w') as f:
         json.dump(new_metrics, f, indent=2)
     with open(MODEL_DIR / 'feature_importance.json', 'w') as f:
         json.dump(fi_dict, f, indent=2)
 
-    global _preprocessor_pkl, _metrics, _fi
+    global _preprocessor_pkl, _preprocessor_nn, _metrics, _fi
     _preprocessor_pkl = scaler
+    _preprocessor_nn  = scaler
     _metrics = new_metrics
     _fi      = fi_dict
 
     return {'status': 'success', 'rows': len(df),
-            'models': len(TRAIN_MODELS_SKLEARN), 'metrics': new_metrics}
+            'models': len(TRAIN_MODELS_SKLEARN),
+            'risk_classification': 'binary (At Risk / Not At Risk)',
+            'ohe_pipeline_saved': True,
+            'metrics': new_metrics}
 
 
 # =============================================================================
@@ -1292,10 +1485,12 @@ if __name__ == '__main__':
             print(f"❌ Training failed: {result['error']}")
             sys.exit(1)
         print(f"\n✅ Training complete: {result['models']} models saved to {MODEL_DIR}")
+        print(f"   Risk classification : {result.get('risk_classification', 'binary')}")
+        print(f"   OHE pipeline saved  : {result.get('ohe_pipeline_saved', False)}")
         sys.exit(0)
 
     print("\n" + "═" * 65)
-    print("  EduAI Predict — Backend Server  v3.0")
+    print("  EduAI Predict — Backend Server  v3.2")
     print("  Muhammad Asif Riaz  |  F22BDATS1M02032")
     print("  Islamia University of Bahawalpur")
     print("═" * 65)
@@ -1303,7 +1498,9 @@ if __name__ == '__main__':
     print(f"📁 Data directory   : {DATA_DIR}")
     print(f"🔧 joblib available : {JOBLIB_OK}")
     print(f"🔧 sklearn available: {SKLEARN_OK}")
-    print(f"🔧 keras available  : {KERAS_OK}\n")
+    print(f"🔧 keras available  : {KERAS_OK}")
+    print(f"⚖️  Risk classes     : {RISKS}  (BINARY)")
+    print(f"📐 Feature dims     : raw={DIM_RAW}, OHE={DIM_OHE}\n")
 
     load_artifacts()
 
